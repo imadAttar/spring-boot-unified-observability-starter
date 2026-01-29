@@ -1,0 +1,197 @@
+# ============================================================================
+# Spring Boot Unified Observability Starter - Configuration Examples
+# ============================================================================
+
+# This file contains various configuration examples for the observability starter.
+# Copy the relevant sections to your application.yml and customize as needed.
+
+# ============================================================================
+# Example 1: Default Configuration (Minimal Setup)
+# ============================================================================
+observability:
+  enabled: true
+  service:
+    name: ${spring.application.name}
+  stack-export:
+    enabled: true
+    export-path: ./monitoring  # Relative to working directory
+
+# ============================================================================
+# Example 2: Absolute Path for Monitoring Export
+# ============================================================================
+observability:
+  enabled: true
+  service:
+    name: my-service
+  stack-export:
+    enabled: true
+    export-path: /opt/myapp/monitoring  # Absolute path (Linux/Mac)
+    # export-path: C:\myapp\monitoring  # Absolute path (Windows)
+    personalize-config: true
+    export-on-startup: true
+
+# ============================================================================
+# Example 3: User Home Directory
+# ============================================================================
+observability:
+  enabled: true
+  service:
+    name: my-service
+  stack-export:
+    enabled: true
+    export-path: ~/monitoring  # Expands to /home/username/monitoring
+    export-on-startup: true
+
+# ============================================================================
+# Example 4: Environment Variable with Fallback
+# ============================================================================
+observability:
+  enabled: true
+  service:
+    name: my-service
+  stack-export:
+    enabled: true
+    export-path: ${MONITORING_PATH:./monitoring}  # Uses env var or fallback
+    export-on-startup: true
+
+# ============================================================================
+# Example 5: Parent Directory (One Level Up)
+# ============================================================================
+observability:
+  enabled: true
+  service:
+    name: my-service
+  stack-export:
+    enabled: true
+    export-path: ../monitoring  # One level up from working directory
+    export-on-startup: true
+
+# ============================================================================
+# Example 6: Complete Production Configuration
+# ============================================================================
+observability:
+  enabled: true
+
+  # Service Information
+  service:
+    name: ${spring.application.name}
+    version: ${info.app.version:1.0.0}
+    environment: ${SPRING_PROFILES_ACTIVE:production}
+    team: platform-team
+
+  # Metrics Configuration
+  metrics:
+    enabled: true
+    jvm-enabled: true
+    http-enabled: true
+    database-enabled: true
+    custom-enabled: false
+
+  # Tracing Configuration
+  tracing:
+    enabled: true
+    sampling-probability: 0.1  # 10% sampling in production
+    export-endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+  # Logging Configuration
+  logging:
+    json-enabled: true
+    include-trace-id: true
+    include-span-id: true
+
+  # Stack Export Configuration
+  stack-export:
+    enabled: true
+    export-path: ${MONITORING_PATH:/opt/myapp/monitoring}
+    personalize-config: true
+    export-on-startup: true
+
+# ============================================================================
+# Example 7: Development Environment
+# ============================================================================
+observability:
+  enabled: true
+
+  service:
+    name: my-service-dev
+    environment: development
+
+  metrics:
+    enabled: true
+    jvm-enabled: true
+    http-enabled: true
+    database-enabled: true
+    custom-enabled: true  # Enable custom metrics examples in dev
+
+  tracing:
+    enabled: true
+    sampling-probability: 1.0  # 100% sampling in dev
+
+  logging:
+    json-enabled: false  # Plain text logs for dev
+    include-trace-id: true
+    include-span-id: true
+
+  stack-export:
+    enabled: true
+    export-path: ./monitoring  # Local directory
+    personalize-config: true
+    export-on-startup: true
+
+# ============================================================================
+# Example 8: Docker Container Environment
+# ============================================================================
+observability:
+  enabled: true
+
+  service:
+    name: ${HOSTNAME:my-service}  # Use container hostname
+    environment: ${ENV:production}
+
+  stack-export:
+    enabled: true
+    export-path: /app/monitoring  # Inside container
+    export-on-startup: true
+
+# ============================================================================
+# Path Resolution Examples
+# ============================================================================
+# The export-path parameter supports multiple formats:
+#
+# 1. Relative to working directory:
+#    export-path: ./monitoring
+#    export-path: monitoring
+#    export-path: ../monitoring
+#
+# 2. Absolute paths:
+#    export-path: /opt/monitoring           (Linux/Mac)
+#    export-path: /home/user/monitoring     (Linux)
+#    export-path: C:\monitoring             (Windows)
+#    export-path: D:\apps\monitoring        (Windows)
+#
+# 3. Home directory expansion:
+#    export-path: ~/monitoring              (Expands to user home)
+#    export-path: ~/apps/my-service/monitoring
+#
+# 4. Environment variables:
+#    export-path: ${MONITORING_PATH}                    (Required env var)
+#    export-path: ${MONITORING_PATH:./monitoring}       (With fallback)
+#    export-path: ${HOME}/monitoring                    (Using HOME env var)
+#
+# ============================================================================
+# Running from Different Directories
+# ============================================================================
+# When using relative paths, the monitoring directory is created relative
+# to the working directory where you start the application.
+#
+# Example 1 - Run from project root:
+#   cd /path/to/myproject
+#   java -jar target/myapp.jar
+#   => Monitoring created at: /path/to/myproject/monitoring
+#
+# Example 2 - Run from target directory:
+#   cd /path/to/myproject/target
+#   java -jar myapp.jar
+#   => Monitoring created at: /path/to/myproject/target/monitoring
+#
+# To ensure consistent location, use absolute paths or environment variables!

@@ -1,0 +1,107 @@
+{
+  "title": "Spring Boot - Distributed Tracing",
+  "tags": [
+    "spring-boot",
+    "tracing",
+    "observability",
+    "opentelemetry"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "editable": true,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(http_server_requests_seconds_count, service)",
+        "refresh": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Top 10 Slowest Endpoints",
+      "type": "table",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "topk(10, histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{service=\"$service\"}[5m])))",
+          "format": "table",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Request Latency Distribution",
+      "type": "heatmap",
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_bucket{service=\"$service\"}[5m])",
+          "format": "heatmap",
+          "legendFormat": "{{le}}"
+        }
+      ],
+      "dataFormat": "tsbuckets"
+    },
+    {
+      "id": 3,
+      "title": "Requests per Endpoint",
+      "type": "graph",
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "targets": [
+        {
+          "expr": "sum by (uri) (rate(http_server_requests_seconds_count{service=\"$service\"}[5m]))",
+          "legendFormat": "{{uri}}"
+        }
+      ]
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "datasource": "Jaeger",
+        "enable": true,
+        "name": "Trace Links",
+        "iconColor": "blue"
+      }
+    ]
+  },
+  "links": [
+    {
+      "title": "Jaeger UI",
+      "url": "http://localhost:16686",
+      "type": "link",
+      "icon": "external link"
+    },
+    {
+      "title": "Tempo UI",
+      "url": "http://localhost:3200",
+      "type": "link",
+      "icon": "external link"
+    }
+  ]
+}

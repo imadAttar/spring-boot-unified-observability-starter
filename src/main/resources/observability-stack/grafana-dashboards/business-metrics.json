@@ -1,0 +1,389 @@
+{
+  "title": "Spring Boot - Business Metrics",
+  "tags": [
+    "spring-boot",
+    "business",
+    "observability",
+    "kpi"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "label": "Service",
+        "datasource": "Prometheus",
+        "query": "label_values(business_orders_total, service)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "environment",
+        "type": "query",
+        "label": "Environment",
+        "datasource": "Prometheus",
+        "query": "label_values(business_orders_total{service=\"$service\"}, environment)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Orders per Minute",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(business_orders_total{service=\"$service\",environment=\"$environment\"}[1m]) * 60",
+          "legendFormat": "Orders/min",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Orders/min"
+        }
+      ],
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2
+    },
+    {
+      "id": 2,
+      "title": "Average Order Value",
+      "type": "stat",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(business_order_value_sum{service=\"$service\",environment=\"$environment\"}[5m]) / rate(business_order_value_count{service=\"$service\",environment=\"$environment\"}[5m])",
+          "legendFormat": "Avg Order Value",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 100
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Active Users",
+      "type": "gauge",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "business_users_active{service=\"$service\",environment=\"$environment\"}",
+          "legendFormat": "Active Users",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "green",
+                "value": 50
+              },
+              {
+                "color": "blue",
+                "value": 100
+              }
+            ]
+          },
+          "max": 200,
+          "min": 0
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Payment Processing Time",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "business_payment_duration_seconds{service=\"$service\",environment=\"$environment\",quantile=\"0.5\"}",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "expr": "business_payment_duration_seconds{service=\"$service\",environment=\"$environment\",quantile=\"0.95\"}",
+          "legendFormat": "P95",
+          "refId": "B"
+        },
+        {
+          "expr": "business_payment_duration_seconds{service=\"$service\",environment=\"$environment\",quantile=\"0.99\"}",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "s",
+          "label": "Processing Time"
+        }
+      ],
+      "lines": true,
+      "fill": 0,
+      "linewidth": 2
+    },
+    {
+      "id": 5,
+      "title": "Order Value Distribution",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "business_order_value{service=\"$service\",environment=\"$environment\",quantile=\"0.5\"}",
+          "legendFormat": "P50 Order Value",
+          "refId": "A"
+        },
+        {
+          "expr": "business_order_value{service=\"$service\",environment=\"$environment\",quantile=\"0.95\"}",
+          "legendFormat": "P95 Order Value",
+          "refId": "B"
+        },
+        {
+          "expr": "business_order_value{service=\"$service\",environment=\"$environment\",quantile=\"0.99\"}",
+          "legendFormat": "P99 Order Value",
+          "refId": "C"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "currencyUSD",
+          "label": "Order Value"
+        }
+      ],
+      "lines": true,
+      "fill": 0,
+      "linewidth": 2
+    },
+    {
+      "id": 6,
+      "title": "Revenue per Hour",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "increase(business_order_value_sum{service=\"$service\",environment=\"$environment\"}[1h])",
+          "legendFormat": "Revenue/hour",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "currencyUSD",
+          "label": "Revenue"
+        }
+      ],
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2,
+      "bars": true
+    },
+    {
+      "id": 7,
+      "title": "Business KPIs",
+      "type": "stat",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "increase(business_orders_total{service=\"$service\",environment=\"$environment\"}[24h])",
+          "legendFormat": "Orders Today",
+          "refId": "A"
+        },
+        {
+          "expr": "increase(business_order_value_sum{service=\"$service\",environment=\"$environment\"}[24h])",
+          "legendFormat": "Revenue Today",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(business_payment_duration_seconds_sum{service=\"$service\",environment=\"$environment\"}[5m]) / rate(business_payment_duration_seconds_count{service=\"$service\",environment=\"$environment\"}[5m])",
+          "legendFormat": "Avg Payment Time",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "orientation": "horizontal"
+      },
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Revenue Today"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg Payment Time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "title": "Business Metrics Summary",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "rate(business_orders_total{service=\"$service\",environment=\"$environment\"}[1h]) * 3600",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "Orders/hour",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(business_order_value_sum{service=\"$service\",environment=\"$environment\"}[1h]) * 3600",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "Revenue/hour",
+          "refId": "B"
+        },
+        {
+          "expr": "business_users_active{service=\"$service\",environment=\"$environment\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "Active Users",
+          "refId": "C"
+        },
+        {
+          "expr": "rate(business_payment_duration_seconds_count{service=\"$service\",environment=\"$environment\"}[5m])",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "Payments/sec",
+          "refId": "D"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value #A": "Orders/hour",
+              "Value #B": "Revenue/hour ($)",
+              "Value #C": "Active Users",
+              "Value #D": "Payments/sec"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

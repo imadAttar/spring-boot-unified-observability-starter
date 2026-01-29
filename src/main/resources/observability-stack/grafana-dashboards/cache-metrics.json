@@ -1,0 +1,120 @@
+{
+  "title": "Spring Boot - Cache Metrics",
+  "tags": [
+    "spring-boot",
+    "cache",
+    "observability"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "cache_name",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(cache_gets_total, cache)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Cache Hit Rate %",
+      "type": "gauge",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "(sum(rate(cache_gets_total{cache=~\"$cache_name\",result=\"hit\"}[5m])) / sum(rate(cache_gets_total{cache=~\"$cache_name\"}[5m]))) * 100"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Cache Gets - Hit vs Miss",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum by (result) (rate(cache_gets_total{cache=~\"$cache_name\"}[5m]))",
+          "legendFormat": "{{result}}"
+        }
+      ],
+      "stack": true
+    },
+    {
+      "id": 3,
+      "title": "Cache Evictions",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(cache_evictions_total{cache=~\"$cache_name\"}[5m])",
+          "legendFormat": "{{cache}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Cache Size (Entries)",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "cache_size_entries{cache=~\"$cache_name\"}",
+          "legendFormat": "{{cache}}"
+        }
+      ]
+    }
+  ]
+}

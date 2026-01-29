@@ -1,0 +1,350 @@
+{
+  "title": "Spring Boot - Database Metrics",
+  "tags": [
+    "spring-boot",
+    "database",
+    "observability",
+    "hikaricp"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "label": "Service",
+        "datasource": "Prometheus",
+        "query": "label_values(hikaricp_connections_active, service)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "environment",
+        "type": "query",
+        "label": "Environment",
+        "datasource": "Prometheus",
+        "query": "label_values(hikaricp_connections_active{service=\"$service\"}, environment)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Connections",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_active{service=\"$service\",environment=\"$environment\"}",
+          "legendFormat": "Active Connections",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Connections"
+        }
+      ],
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2,
+      "nullPointMode": "null"
+    },
+    {
+      "id": 2,
+      "title": "Idle Connections",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_idle{service=\"$service\",environment=\"$environment\"}",
+          "legendFormat": "Idle Connections",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Connections"
+        }
+      ],
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2
+    },
+    {
+      "id": 3,
+      "title": "Pending Connection Requests",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_pending{service=\"$service\",environment=\"$environment\"}",
+          "legendFormat": "Pending Requests",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Requests"
+        }
+      ],
+      "alert": {
+        "name": "Pending Connections Alert",
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "frequency": "60s",
+        "handler": 1,
+        "message": "Database connection pool has pending requests",
+        "noDataState": "no_data"
+      },
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2
+    },
+    {
+      "id": 4,
+      "title": "Connection Pool Usage %",
+      "type": "gauge",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "(hikaricp_connections_active{service=\"$service\",environment=\"$environment\"} / hikaricp_connections_max{service=\"$service\",environment=\"$environment\"}) * 100",
+          "legendFormat": "Pool Usage %",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "max": 100,
+          "min": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Connection Acquisition Time (P95)",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(hikaricp_connections_acquire_seconds_bucket{service=\"$service\",environment=\"$environment\"}[5m]))",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(hikaricp_connections_acquire_seconds_bucket{service=\"$service\",environment=\"$environment\"}[5m]))",
+          "legendFormat": "P95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(hikaricp_connections_acquire_seconds_bucket{service=\"$service\",environment=\"$environment\"}[5m]))",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "s",
+          "label": "Time"
+        }
+      ],
+      "lines": true,
+      "fill": 0,
+      "linewidth": 2
+    },
+    {
+      "id": 6,
+      "title": "Connection Timeout Count",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "rate(hikaricp_connections_timeout_total{service=\"$service\",environment=\"$environment\"}[5m])",
+          "legendFormat": "Timeouts/sec",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Timeouts"
+        }
+      ],
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2
+    },
+    {
+      "id": 7,
+      "title": "Connection Pool Overview",
+      "type": "stat",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_max{service=\"$service\",environment=\"$environment\"}",
+          "legendFormat": "Max Pool Size",
+          "refId": "A"
+        },
+        {
+          "expr": "hikaricp_connections_active{service=\"$service\",environment=\"$environment\"}",
+          "legendFormat": "Active",
+          "refId": "B"
+        },
+        {
+          "expr": "hikaricp_connections_idle{service=\"$service\",environment=\"$environment\"}",
+          "legendFormat": "Idle",
+          "refId": "C"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 8,
+      "title": "Average Connection Wait Time",
+      "type": "stat",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "rate(hikaricp_connections_acquire_seconds_sum{service=\"$service\",environment=\"$environment\"}[5m]) / rate(hikaricp_connections_acquire_seconds_count{service=\"$service\",environment=\"$environment\"}[5m])",
+          "legendFormat": "Avg Wait Time",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.5
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

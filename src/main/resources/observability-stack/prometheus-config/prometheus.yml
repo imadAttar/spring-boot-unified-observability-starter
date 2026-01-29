@@ -1,0 +1,75 @@
+# Configuration Prometheus pour Spring Boot Unified Observability Starter
+# Ce fichier configure Prometheus pour collecter les métriques de votre application
+
+global:
+  # Intervalle de collecte des métriques
+  scrape_interval: 15s
+
+  # Intervalle d'évaluation des règles d'alerting
+  evaluation_interval: 15s
+
+  # Labels externes ajoutés à toutes les métriques
+  external_labels:
+    monitor: 'spring-boot-observability'
+    cluster: 'local'
+
+# Configuration Alertmanager (optionnel)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - 'localhost:9093'  # Décommenter si vous utilisez Alertmanager
+
+# Fichiers de règles d'alerting
+rule_files:
+  - '/etc/prometheus/rules/*.yml'
+  # Les 20 règles d'alerting sont dans spring-boot-alerts.yml
+
+# Configuration du scraping (collecte des métriques)
+scrape_configs:
+
+  # Job 1: Prometheus lui-même
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          environment: 'local'
+
+  # Job 2: Application Spring Boot de Démo
+  - job_name: 'spring-boot-demo'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s  # Collecte plus fréquente pour la démo
+    static_configs:
+      - targets: ['host.docker.internal:8080']  # Pour Docker
+        # - targets: ['localhost:8080']  # Décommenter si Prometheus n'est pas dans Docker
+        labels:
+          service: 'demo-app'
+          application: 'demo-observability-app'
+          environment: 'development'
+          team: 'platform'
+
+  # Job 3: Autres applications Spring Boot (Exemple)
+  # - job_name: 'my-production-app'
+  #   metrics_path: '/actuator/prometheus'
+  #   static_configs:
+  #     - targets: ['production-server:8080']
+  #       labels:
+  #         service: 'my-service'
+  #         environment: 'production'
+  #         version: '1.0.0'
+
+  # Job 4: Multiple instances (Load Balanced)
+  # - job_name: 'my-app-cluster'
+  #   metrics_path: '/actuator/prometheus'
+  #   static_configs:
+  #     - targets:
+  #       - 'app-instance-1:8080'
+  #       - 'app-instance-2:8080'
+  #       - 'app-instance-3:8080'
+  #       labels:
+  #         service: 'my-app'
+  #         environment: 'production'
+
+# Note: Configuration du stockage (retention) se fait via les flags de commande dans docker-compose.yml
+# Voir docker-compose.yml: --storage.tsdb.retention.time=15d

@@ -1,0 +1,398 @@
+{
+  "title": "Spring Boot - Application Health",
+  "tags": [
+    "spring-boot",
+    "health",
+    "observability",
+    "sre"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "label": "Service",
+        "datasource": "Prometheus",
+        "query": "label_values(up, service)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "environment",
+        "type": "query",
+        "label": "Environment",
+        "datasource": "Prometheus",
+        "query": "label_values(up{service=\"$service\"}, environment)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "instance",
+        "type": "query",
+        "label": "Instance",
+        "datasource": "Prometheus",
+        "query": "label_values(up{service=\"$service\",environment=\"$environment\"}, instance)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Application Status",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "up{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Application Uptime",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "process_uptime_seconds{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "HTTP Error Rate %",
+      "type": "graph",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "(sum(rate(http_server_requests_seconds_count{service=\"$service\",environment=\"$environment\",instance=~\"$instance\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}[5m]))) * 100",
+          "legendFormat": "5xx Error Rate %",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "percent",
+          "label": "Error Rate"
+        }
+      ],
+      "alert": {
+        "name": "High Error Rate",
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                1
+              ],
+              "type": "gt"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            }
+          }
+        ],
+        "message": "HTTP 5xx error rate is above 1%"
+      },
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2,
+      "thresholds": [
+        {
+          "value": 1,
+          "colorMode": "critical",
+          "op": "gt",
+          "fill": true,
+          "line": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Request Rate by Status Code",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{service=\"$service\",environment=\"$environment\",instance=~\"$instance\",status=~\"2..\"}[5m]))",
+          "legendFormat": "2xx Success",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{service=\"$service\",environment=\"$environment\",instance=~\"$instance\",status=~\"4..\"}[5m]))",
+          "legendFormat": "4xx Client Error",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{service=\"$service\",environment=\"$environment\",instance=~\"$instance\",status=~\"5..\"}[5m]))",
+          "legendFormat": "5xx Server Error",
+          "refId": "C"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "reqps",
+          "label": "Requests/sec"
+        }
+      ],
+      "lines": true,
+      "fill": 2,
+      "stack": true,
+      "linewidth": 1
+    },
+    {
+      "id": 5,
+      "title": "Exception Rate",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "targets": [
+        {
+          "expr": "rate(application_exceptions_total{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}[5m])",
+          "legendFormat": "{{exception}}",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Exceptions/sec"
+        }
+      ],
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2
+    },
+    {
+      "id": 6,
+      "title": "Response Time P99",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}[5m]))",
+          "legendFormat": "P99 Latency",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "s",
+          "label": "Response Time"
+        }
+      ],
+      "alert": {
+        "name": "High P99 Latency",
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                1
+              ],
+              "type": "gt"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            }
+          }
+        ],
+        "message": "P99 response time is above 1 second"
+      },
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2,
+      "thresholds": [
+        {
+          "value": 1,
+          "colorMode": "critical",
+          "op": "gt",
+          "fill": true,
+          "line": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Request Throughput",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}[5m]))",
+          "legendFormat": "Total Requests/sec",
+          "refId": "A"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "reqps",
+          "label": "Requests/sec"
+        }
+      ],
+      "lines": true,
+      "fill": 2,
+      "linewidth": 2
+    },
+    {
+      "id": 8,
+      "title": "Key Health Metrics Summary",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "targets": [
+        {
+          "expr": "up{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "process_uptime_seconds{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "expr": "(sum by (instance) (rate(http_server_requests_seconds_count{service=\"$service\",environment=\"$environment\",instance=~\"$instance\",status=~\"5..\"}[5m])) / sum by (instance) (rate(http_server_requests_seconds_count{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}[5m]))) * 100",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{service=\"$service\",environment=\"$environment\",instance=~\"$instance\"}[5m]))",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "job": true
+            },
+            "renameByName": {
+              "Value #A": "Status",
+              "Value #B": "Uptime (s)",
+              "Value #C": "Error Rate %",
+              "Value #D": "P99 Latency (s)"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
