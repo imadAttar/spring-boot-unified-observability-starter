@@ -1,0 +1,324 @@
+# Spring Boot Unified Observability - Prometheus Alert Rules
+# 20 production-ready alert rules for comprehensive monitoring
+# Version: 1.0.0
+# Date: 2026-01-28
+
+groups:
+  - name: spring-boot-alerts
+    interval: 30s
+    rules:
+
+      # ========================================
+      # Category 1: Latency Alerts (5 rules)
+      # ========================================
+
+      - alert: HighP95Latency
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: http
+          category: latency
+        annotations:
+          summary: "High P95 latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value | humanizeDuration }} (threshold: 1s) for service {{ $labels.service }} in {{ $labels.environment }}"
+          runbook_url: "https://runbooks.example.com/HighP95Latency"
+
+      - alert: CriticalP95Latency
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 2
+        for: 3m
+        labels:
+          severity: critical
+          component: http
+          category: latency
+        annotations:
+          summary: "CRITICAL: Very high P95 latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value | humanizeDuration }} (threshold: 2s). Immediate action required! Service: {{ $labels.service }}, Environment: {{ $labels.environment }}"
+          runbook_url: "https://runbooks.example.com/CriticalP95Latency"
+
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, rate(http_server_requests_seconds_bucket[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+          component: http
+          category: latency
+        annotations:
+          summary: "High P99 latency on {{ $labels.service }}"
+          description: "P99 latency is {{ $value | humanizeDuration }} (threshold: 3s) for service {{ $labels.service }}"
+          runbook_url: "https://runbooks.example.com/HighP99Latency"
+
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(hikaricp_connections_acquire_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: latency
+        annotations:
+          summary: "Slow database connection acquisition on {{ $labels.service }}"
+          description: "Database connection acquisition P95 is {{ $value | humanizeDuration }} (threshold: 0.5s). Check connection pool size and database performance."
+          runbook_url: "https://runbooks.example.com/SlowDatabaseQueries"
+
+      - alert: HighAverageResponseTime
+        expr: rate(http_server_requests_seconds_sum[5m]) / rate(http_server_requests_seconds_count[5m]) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: http
+          category: latency
+        annotations:
+          summary: "High average response time on {{ $labels.service }}"
+          description: "Average response time is {{ $value | humanizeDuration }} (threshold: 0.5s) for {{ $labels.service }}"
+          runbook_url: "https://runbooks.example.com/HighAverageResponseTime"
+
+      # ========================================
+      # Category 2: Error Rate Alerts (4 rules)
+      # ========================================
+
+      - alert: ElevatedErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (service, environment)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (service, environment)
+          ) * 100 > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: http
+          category: errors
+        annotations:
+          summary: "Elevated 5xx error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanize }}% (threshold: 1%) for service {{ $labels.service }} in {{ $labels.environment }}"
+          runbook_url: "https://runbooks.example.com/ElevatedErrorRate"
+
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (service, environment)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (service, environment)
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+          component: http
+          category: errors
+        annotations:
+          summary: "CRITICAL: High 5xx error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanize }}% (threshold: 5%). Immediate action required! Service: {{ $labels.service }}, Environment: {{ $labels.environment }}"
+          runbook_url: "https://runbooks.example.com/HighErrorRate"
+
+      - alert: Increased4xxErrors
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"4.."}[5m])) by (service, environment)
+            /
+            sum(rate(http_server_requests_seconds_count[5m])) by (service, environment)
+          ) * 100 > 10
+        for: 10m
+        labels:
+          severity: info
+          component: http
+          category: errors
+        annotations:
+          summary: "Increased 4xx client errors on {{ $labels.service }}"
+          description: "Client error rate is {{ $value | humanize }}% (threshold: 10%). May indicate API misuse or client issues."
+          runbook_url: "https://runbooks.example.com/Increased4xxErrors"
+
+      - alert: HighExceptionRate
+        expr: rate(application_exceptions_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+          category: errors
+        annotations:
+          summary: "High exception rate on {{ $labels.service }}"
+          description: "Application is throwing {{ $value | humanize }} exceptions per second (threshold: 1/s)"
+          runbook_url: "https://runbooks.example.com/HighExceptionRate"
+
+      # ========================================
+      # Category 3: Memory Pressure (3 rules)
+      # ========================================
+
+      - alert: HighHeapMemoryUsage
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"}
+            /
+            jvm_memory_max_bytes{area="heap"}
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+          category: memory
+        annotations:
+          summary: "High heap memory usage on {{ $labels.service }}"
+          description: "Heap memory usage is {{ $value | humanize }}% (threshold: 80%) for {{ $labels.service }} on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.example.com/HighHeapMemoryUsage"
+
+      - alert: CriticalHeapMemoryUsage
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"}
+            /
+            jvm_memory_max_bytes{area="heap"}
+          ) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+          component: jvm
+          category: memory
+        annotations:
+          summary: "CRITICAL: Very high heap memory usage on {{ $labels.service }}"
+          description: "Heap memory usage is {{ $value | humanize }}%. OutOfMemoryError imminent! Service: {{ $labels.service }}, Instance: {{ $labels.instance }}"
+          runbook_url: "https://runbooks.example.com/CriticalHeapMemoryUsage"
+
+      - alert: PossibleMemoryLeak
+        expr: |
+          (
+            (jvm_memory_used_bytes{area="heap"} - jvm_memory_used_bytes{area="heap"} offset 1h)
+            /
+            jvm_memory_used_bytes{area="heap"} offset 1h
+          ) * 100 > 10
+        for: 30m
+        labels:
+          severity: warning
+          component: jvm
+          category: memory
+        annotations:
+          summary: "Possible memory leak detected on {{ $labels.service }}"
+          description: "Heap memory increased by {{ $value | humanize }}% in the last hour. Investigate for memory leaks in {{ $labels.service }}"
+          runbook_url: "https://runbooks.example.com/PossibleMemoryLeak"
+
+      # ========================================
+      # Category 4: GC Pressure (2 rules)
+      # ========================================
+
+      - alert: HighGCActivity
+        expr: rate(jvm_gc_pause_seconds_count[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+          category: gc
+        annotations:
+          summary: "High GC activity on {{ $labels.service }}"
+          description: "GC is running {{ $value | humanize }} times per second (threshold: 5) on {{ $labels.service }}"
+          runbook_url: "https://runbooks.example.com/HighGCActivity"
+
+      - alert: LongGCPauses
+        expr: rate(jvm_gc_pause_seconds_sum[5m]) / rate(jvm_gc_pause_seconds_count[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+          category: gc
+        annotations:
+          summary: "Long GC pauses on {{ $labels.service }}"
+          description: "Average GC pause is {{ $value | humanizeDuration }} (threshold: 0.1s) on {{ $labels.service }}"
+          runbook_url: "https://runbooks.example.com/LongGCPauses"
+
+      # ========================================
+      # Category 5: Thread Pool (2 rules)
+      # ========================================
+
+      - alert: HighThreadCount
+        expr: jvm_threads_live_threads > 500
+        for: 10m
+        labels:
+          severity: warning
+          component: jvm
+          category: threads
+        annotations:
+          summary: "High thread count on {{ $labels.service }}"
+          description: "Thread count is {{ $value }} (threshold: 500) on {{ $labels.service }}. Possible thread leak."
+          runbook_url: "https://runbooks.example.com/HighThreadCount"
+
+      - alert: ThreadPoolExhaustion
+        expr: |
+          (
+            jvm_threads_live_threads
+            /
+            jvm_threads_peak_threads
+          ) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          component: jvm
+          category: threads
+        annotations:
+          summary: "CRITICAL: Thread pool near exhaustion on {{ $labels.service }}"
+          description: "Thread usage is {{ $value | humanize }}% of peak (threshold: 90%). Application may become unresponsive."
+          runbook_url: "https://runbooks.example.com/ThreadPoolExhaustion"
+
+      # ========================================
+      # Category 6: Database Pool (2 rules)
+      # ========================================
+
+      - alert: ConnectionPoolSaturation
+        expr: |
+          (
+            hikaricp_connections_active
+            /
+            hikaricp_connections_max
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: connection_pool
+        annotations:
+          summary: "Connection pool saturation on {{ $labels.service }}"
+          description: "Connection pool usage is {{ $value | humanize }}% (threshold: 80%) on {{ $labels.service }}"
+          runbook_url: "https://runbooks.example.com/ConnectionPoolSaturation"
+
+      - alert: PendingDatabaseConnections
+        expr: hikaricp_connections_pending > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: connection_pool
+        annotations:
+          summary: "Pending database connections on {{ $labels.service }}"
+          description: "{{ $value }} threads are waiting for database connections on {{ $labels.service }}. Consider increasing pool size."
+          runbook_url: "https://runbooks.example.com/PendingDatabaseConnections"
+
+      # ========================================
+      # Category 7: Availability (2 rules)
+      # ========================================
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: availability
+          category: uptime
+        annotations:
+          summary: "Service {{ $labels.service }} is DOWN"
+          description: "Service {{ $labels.service }} in environment {{ $labels.environment }} (instance {{ $labels.instance }}) is not responding. Immediate action required!"
+          runbook_url: "https://runbooks.example.com/ServiceDown"
+
+      - alert: LowRequestRate
+        expr: |
+          (
+            rate(http_server_requests_seconds_count[5m])
+            <
+            avg_over_time(rate(http_server_requests_seconds_count[5m])[1d:5m]) * 0.2
+          )
+          and
+          avg_over_time(rate(http_server_requests_seconds_count[5m])[1d:5m]) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: availability
+          category: traffic
+        annotations:
+          summary: "Abnormally low request rate on {{ $labels.service }}"
+          description: "Request rate is {{ $value | humanize }} req/s, which is <20% of the daily average. Possible upstream issue or service degradation."
+          runbook_url: "https://runbooks.example.com/LowRequestRate"
