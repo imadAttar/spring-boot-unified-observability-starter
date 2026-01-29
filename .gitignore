@@ -66,3 +66,9 @@ bin/
 # Logs
 logs/
 *.log
+
+# AI Assistant files (keep local only)
+CLAUDE.md
+.claude/
+.cursor/
+.cursorrules
