@@ -31,7 +31,7 @@ public class ObservabilityStackExportService {
     @Value("${spring.application.name:spring-boot-app}")
     private String applicationName;
 
-    @Value("${observability.service.name:${spring.application.name}}")
+    @Value("${observability.service.name:spring-boot-app}")
     private String serviceName;
 
     @Value("${observability.service.environment:development}")
@@ -44,6 +44,11 @@ public class ObservabilityStackExportService {
 
     @PostConstruct
     public void init() {
+        // Use applicationName as fallback for serviceName if it's still the default
+        if ("spring-boot-app".equals(serviceName) && !applicationName.equals(serviceName)) {
+            serviceName = applicationName;
+        }
+
         log.info("✅ ObservabilityStackExportService bean created");
         log.info("   Application: {}", applicationName);
         log.info("   Service: {}", serviceName);
