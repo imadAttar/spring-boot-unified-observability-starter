@@ -89,7 +89,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnWebApplication
-@ConditionalOnProperty(prefix = "observability.stack-export", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "observability.stack-export", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class ObservabilityStackExportController {
 
     private static final String EXPORT_BASE_PATH = "/actuator/observability";

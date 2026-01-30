@@ -27,6 +27,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
+import jakarta.annotation.PreDestroy;
+
 /**
  * Auto-configuration for Unified Observability Starter.
  *
@@ -35,6 +37,8 @@ import org.springframework.context.annotation.Import;
  * - Distributed tracing (OpenTelemetry)
  * - Structured JSON logging (Logstash encoder)
  * - Grafana dashboard integration
+ *
+ * Includes proper resource cleanup via @PreDestroy to prevent resource leaks.
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ObservabilityProperties.class)
@@ -50,6 +54,9 @@ import org.springframework.context.annotation.Import;
 })
 @Slf4j
 public class ObservabilityAutoConfiguration {
+
+    private SdkTracerProvider tracerProvider;
+    private OtlpGrpcSpanExporter spanExporter;
 
     /**
      * Configure Prometheus metrics registry.
@@ -82,6 +89,7 @@ public class ObservabilityAutoConfiguration {
 
     /**
      * Configure OpenTelemetry SDK for distributed tracing.
+     * Resources are properly cleaned up on application shutdown via @PreDestroy.
      */
     @Bean
     @ConditionalOnMissingBean
@@ -92,13 +100,13 @@ public class ObservabilityAutoConfiguration {
 
         ObservabilityProperties.Tracing tracingConfig = properties.getTracing();
 
-        // Configure OTLP exporter
-        OtlpGrpcSpanExporter spanExporter = OtlpGrpcSpanExporter.builder()
+        // Configure OTLP exporter - store reference for cleanup
+        this.spanExporter = OtlpGrpcSpanExporter.builder()
             .setEndpoint(tracingConfig.getOtlpEndpoint())
             .build();
 
-        // Configure tracer provider with sampling
-        SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
+        // Configure tracer provider with sampling - store reference for cleanup
+        this.tracerProvider = SdkTracerProvider.builder()
             .addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
             .setSampler(Sampler.traceIdRatioBased(tracingConfig.getSamplingProbability()))
             .build();
@@ -112,6 +120,33 @@ public class ObservabilityAutoConfiguration {
             tracingConfig.getSamplingProbability());
 
         return openTelemetry;
+    }
+
+    /**
+     * Cleanup OpenTelemetry resources on application shutdown.
+     * Ensures all pending spans are exported and connections are closed properly.
+     */
+    @PreDestroy
+    public void cleanup() {
+        if (tracerProvider != null) {
+            log.info("🔧 Shutting down OpenTelemetry tracer provider...");
+            try {
+                tracerProvider.close();
+                log.info("✅ OpenTelemetry tracer provider shutdown complete");
+            } catch (Exception e) {
+                log.warn("⚠️  Error during OpenTelemetry tracer provider shutdown: {}", e.getMessage());
+            }
+        }
+
+        if (spanExporter != null) {
+            log.info("🔧 Shutting down OTLP span exporter...");
+            try {
+                spanExporter.close();
+                log.info("✅ OTLP span exporter shutdown complete");
+            } catch (Exception e) {
+                log.warn("⚠️  Error during OTLP span exporter shutdown: {}", e.getMessage());
+            }
+        }
     }
 
     /**

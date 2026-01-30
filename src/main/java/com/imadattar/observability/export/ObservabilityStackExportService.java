@@ -25,7 +25,7 @@ import java.util.zip.ZipOutputStream;
  */
 @Service
 @Slf4j
-@ConditionalOnProperty(prefix = "observability.stack-export", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "observability.stack-export", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class ObservabilityStackExportService {
 
     @Value("${spring.application.name:spring-boot-app}")
