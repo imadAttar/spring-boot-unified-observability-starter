@@ -83,7 +83,10 @@ public class TracingHelper {
      * @param value Attribute value
      */
     public void addAttribute(String key, String value) {
-        Span.current().setAttribute(key, value);
+        Span span = Span.current();
+        if (span != null && span.getSpanContext().isValid()) {
+            span.setAttribute(key, value);
+        }
     }
 
     /**
@@ -92,6 +95,9 @@ public class TracingHelper {
      * @param eventName Event name
      */
     public void addEvent(String eventName) {
-        Span.current().addEvent(eventName);
+        Span span = Span.current();
+        if (span != null && span.getSpanContext().isValid()) {
+            span.addEvent(eventName);
+        }
     }
 }

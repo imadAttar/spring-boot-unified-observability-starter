@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: test-app
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+observability:
+  enabled: true
+  metrics:
+    enabled: true
+    jvm-enabled: true
+    http-enabled: true
+    database-enabled: true
+  tracing:
+    enabled: true
+    sampling-probability: 1.0
+  logging:
+    json-enabled: true
+    include-trace-id: true
+    include-span-id: true
