@@ -31,7 +31,7 @@ public class ObservabilityStackExportService {
     @Value("${spring.application.name:spring-boot-app}")
     private String applicationName;
 
-    @Value("${observability.service.name:${spring.application.name}}")
+    @Value("${observability.service.name:spring-boot-app}")
     private String serviceName;
 
     @Value("${observability.service.environment:development}")
@@ -44,11 +44,46 @@ public class ObservabilityStackExportService {
 
     @PostConstruct
     public void init() {
+        // Use applicationName as fallback for serviceName if it's still the default
+        if ("spring-boot-app".equals(serviceName) && !applicationName.equals(serviceName)) {
+            serviceName = applicationName;
+        }
+
+        // Validate configuration values to prevent YAML/JSON injection
+        validateConfigValue(serviceName, "observability.service.name");
+        validateConfigValue(applicationName, "spring.application.name");
+        validateConfigValue(environment, "observability.service.environment");
+        validateConfigValue(team, "observability.service.team");
+
         log.info("✅ ObservabilityStackExportService bean created");
         log.info("   Application: {}", applicationName);
         log.info("   Service: {}", serviceName);
         log.info("   Environment: {}", environment);
         log.info("   Team: {}", team);
+    }
+
+    /**
+     * Validate configuration value to prevent YAML/JSON injection.
+     * Only allows alphanumeric characters, hyphens, underscores, and dots.
+     *
+     * @param value the value to validate
+     * @param propertyName the property name for error messages
+     * @throws IllegalArgumentException if value contains invalid characters
+     */
+    private void validateConfigValue(String value, String propertyName) {
+        if (value == null || value.trim().isEmpty()) {
+            log.warn("Configuration property '{}' is empty, using default", propertyName);
+            return;
+        }
+
+        // Allow alphanumeric, hyphens, underscores, and dots only
+        if (!value.matches("^[a-zA-Z0-9._-]+$")) {
+            throw new IllegalArgumentException(
+                String.format("Invalid characters in configuration property '%s': '%s'. " +
+                    "Only alphanumeric characters, hyphens, underscores, and dots are allowed.",
+                    propertyName, value)
+            );
+        }
     }
 
     /**
@@ -126,7 +161,9 @@ public class ObservabilityStackExportService {
 
         for (Resource dashboard : dashboards) {
             String fileName = "grafana-provisioning/dashboards/json/" + dashboard.getFilename();
-            addFileToZip(zipOut, fileName, dashboard.getInputStream());
+            try (InputStream is = dashboard.getInputStream()) {
+                addFileToZip(zipOut, fileName, is);
+            }
         }
 
         log.debug("Exported {} Grafana dashboards", dashboards.length);

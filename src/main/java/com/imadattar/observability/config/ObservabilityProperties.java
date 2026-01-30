@@ -1,12 +1,15 @@
 package com.imadattar.observability.config;
 
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for Unified Observability Starter.
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "observability")
 public class ObservabilityProperties {
 
@@ -83,16 +86,21 @@ public class ObservabilityProperties {
         /**
          * OpenTelemetry exporter endpoint.
          */
+        @NotBlank(message = "OTLP endpoint cannot be blank")
         private String otlpEndpoint = "http://localhost:4318/v1/traces";
 
         /**
          * Sampling probability (0.0 to 1.0).
          */
+        @DecimalMin(value = "0.0", message = "Sampling probability must be between 0.0 and 1.0")
+        @DecimalMax(value = "1.0", message = "Sampling probability must be between 0.0 and 1.0")
         private double samplingProbability = 1.0;
 
         /**
          * Service name for tracing.
          */
+        @NotBlank(message = "Service name cannot be blank")
+        @Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "Service name must contain only alphanumeric characters, hyphens, and underscores")
         private String serviceName = "spring-boot-app";
 
         /**

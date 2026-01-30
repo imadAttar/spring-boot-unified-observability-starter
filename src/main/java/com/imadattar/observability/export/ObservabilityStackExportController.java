@@ -175,7 +175,7 @@ public class ObservabilityStackExportController {
      * @return success message with export location
      */
     @PostMapping(EXPORT_DIR_PATH)
-    public ResponseEntity<String> exportToDirectory(@RequestParam String path) {
+    public ResponseEntity<String> exportToDirectory(@RequestParam(required = false) String path) {
         log.info("📂 Export request received for directory: {}", path);
 
         try {
@@ -242,8 +242,8 @@ public class ObservabilityStackExportController {
                     .build();
 
             return ResponseEntity.ok(info);
-        } catch (Exception e) {
-            log.error("Failed to retrieve observability info", e);
+        } catch (IOException e) {
+            log.error("Failed to load dashboard resources: {}", e.getMessage(), e);
             // Return minimal info on error
             ObservabilityInfo fallbackInfo = ObservabilityInfo.builder()
                     .dashboardCount(8)
@@ -253,6 +253,7 @@ public class ObservabilityStackExportController {
                     .exportEndpoint(EXPORT_ZIP_PATH)
                     .exportDirectoryEndpoint(EXPORT_DIR_PATH)
                     .quickStart("See documentation for usage instructions")
+                    .securityWarning("Dashboard resources could not be loaded. Using default list.")
                     .build();
             return ResponseEntity.ok(fallbackInfo);
         }
@@ -281,12 +282,7 @@ public class ObservabilityStackExportController {
             throw new IllegalArgumentException("Export path exceeds maximum length of " + MAX_PATH_LENGTH + " characters");
         }
 
-        // Prevent path traversal attempts
-        if (path.contains("..") || path.contains("~")) {
-            throw new IllegalArgumentException("Invalid path: path traversal patterns detected (.., ~)");
-        }
-
-        // Normalize and check absolute path
+        // Normalize path FIRST to handle encoded characters and relative paths
         Path normalizedPath;
         try {
             normalizedPath = Paths.get(path).toAbsolutePath().normalize();
@@ -295,6 +291,20 @@ public class ObservabilityStackExportController {
         }
 
         String absolutePath = normalizedPath.toString();
+        String originalPath = path;
+
+        // Check if normalization changed the path significantly (path traversal attempt)
+        // After normalization, ".." and "~" patterns should be resolved
+        // If the original path contained these, it's likely a traversal attempt
+        if (originalPath.contains("..") || originalPath.contains("~")) {
+            throw new IllegalArgumentException("Invalid path: path traversal patterns detected (.., ~)");
+        }
+
+        // Additional check: if normalized path is very different from original, suspect traversal
+        Path originalAbsolute = Paths.get(originalPath).toAbsolutePath();
+        if (!absolutePath.equals(originalAbsolute.toString()) && originalPath.contains("..")) {
+            throw new IllegalArgumentException("Invalid path: path traversal detected after normalization");
+        }
 
         // Prevent writing to blocked system directories
         for (String blockedPath : BLOCKED_PATHS) {
@@ -304,12 +314,16 @@ public class ObservabilityStackExportController {
         }
 
         // Prevent writing to sensitive user directories
-        if (absolutePath.contains("/.ssh/") ||
-            absolutePath.contains("/.aws/") ||
-            absolutePath.contains("/.kube/") ||
-            absolutePath.contains("/.gnupg/") ||
+        if (absolutePath.contains("/.ssh") ||
+            absolutePath.contains("/.aws") ||
+            absolutePath.contains("/.kube") ||
+            absolutePath.contains("/.gnupg") ||
+            absolutePath.endsWith("/.ssh") ||
+            absolutePath.endsWith("/.aws") ||
+            absolutePath.endsWith("/.kube") ||
+            absolutePath.endsWith("/.gnupg") ||
             absolutePath.contains("/credentials")) {
-            throw new IllegalArgumentException("Cannot export to sensitive directories");
+            throw new IllegalArgumentException("Cannot export to sensitive directories (.ssh, .aws, .kube, .gnupg, credentials)");
         }
 
         // Validate parent directory exists (if not root)
