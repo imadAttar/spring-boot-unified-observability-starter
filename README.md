@@ -44,7 +44,7 @@
 
 - 📈 **Auto-configured Metrics**: JVM, HTTP, Database, Custom
 - 🔍 **Distributed Tracing**: OpenTelemetry with automatic correlation
-- 📝 **Structured Logging**: JSON logs with trace IDs
+- 📝 **Structured Logging**: JSON logs with trace IDs (Logstash or ECS format)
 - 📊 **8 Grafana Dashboards**: Auto-exported and ready to import
 - 🚨 **20 Prometheus Alerts**: Critical production alerts included
 - 🐳 **Docker Compose Stack**: Complete monitoring setup
@@ -255,6 +255,7 @@ observability:
 
   logging:
     json-enabled: true
+    format: json              # Options: json (Logstash), ecs (Spring Boot 3.4+ native)
     include-trace-id: true
 ```
 

@@ -3,6 +3,7 @@ package com.imadattar.observability.config;
 import com.imadattar.observability.metrics.MetricsConfiguration;
 import com.imadattar.observability.tracing.TracingConfiguration;
 import com.imadattar.observability.logging.LoggingConfiguration;
+import com.imadattar.observability.logging.EcsLoggingConfiguration;
 import com.imadattar.observability.export.ObservabilityStackExportService;
 import com.imadattar.observability.export.ObservabilityStackAutoExporter;
 import com.imadattar.observability.export.ObservabilityStackExportController;
@@ -42,6 +43,7 @@ import org.springframework.context.annotation.Import;
     MetricsConfiguration.class,
     TracingConfiguration.class,
     LoggingConfiguration.class,
+    EcsLoggingConfiguration.class,
     ObservabilityStackExportService.class,
     ObservabilityStackAutoExporter.class,
     ObservabilityStackExportController.class

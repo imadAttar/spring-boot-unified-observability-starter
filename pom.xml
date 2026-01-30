@@ -119,11 +119,14 @@
             <version>${opentelemetry.version}</version>
         </dependency>
 
-        <!-- Logging - Structured JSON -->
+        <!-- Logging - Structured JSON (Logstash format) -->
+        <!-- Optional: Only required when using observability.logging.format=json (default) -->
+        <!-- Not needed when using observability.logging.format=ecs (Spring Boot 3.4+ native) -->
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>${logstash-logback.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- Utilities -->

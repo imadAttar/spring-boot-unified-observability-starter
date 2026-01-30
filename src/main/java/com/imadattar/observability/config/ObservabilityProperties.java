@@ -109,6 +109,22 @@ public class ObservabilityProperties {
         private boolean jsonEnabled = true;
 
         /**
+         * Logging format.
+         * <p>
+         * Supported formats:
+         * <ul>
+         *   <li>{@code json} - Logstash JSON format (default, backward compatible)</li>
+         *   <li>{@code ecs} - Elastic Common Schema (requires Spring Boot 3.4+)</li>
+         * </ul>
+         * <p>
+         * The ECS format uses Spring Boot 3.4+ native structured logging support,
+         * which provides better integration with Elastic Stack and reduces external dependencies.
+         * <p>
+         * Default: {@code json}
+         */
+        private String format = "json";
+
+        /**
          * Include trace ID in logs.
          */
         private boolean includeTraceId = true;
