@@ -19,6 +19,8 @@ import org.springframework.context.annotation.Configuration;
  * - Span creation for HTTP requests, database queries, external calls
  * - Integration with logs (trace ID, span ID in MDC)
  * - OTLP export to Jaeger, Tempo, or other backends
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(prefix = "observability.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)

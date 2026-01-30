@@ -16,12 +16,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.text.StringSubstitutor;
 
 /**
  * Service for exporting the complete observability stack (Grafana dashboards, Prometheus config, Docker Compose).
  * This allows users to easily get all monitoring infrastructure files.
+ *
+ * @since 1.0.0
  */
 @Service
 @Slf4j
@@ -340,7 +346,18 @@ public class ObservabilityStackExportService {
     }
 
     private String customizePrometheusConfig(String template) {
-        return template
+        Map<String, String> values = new HashMap<>();
+        values.put("SERVICE_NAME", serviceName);
+        values.put("APPLICATION_NAME", applicationName);
+        values.put("ENVIRONMENT", environment);
+        values.put("TEAM", team);
+
+        // Use StringSubstitutor for efficient template replacement
+        StringSubstitutor substitutor = new StringSubstitutor(values);
+
+        // First apply variable substitution, then legacy string replacements for backwards compatibility
+        String result = substitutor.replace(template);
+        return result
                 .replace("spring-boot-demo", serviceName)
                 .replace("demo-app", serviceName)
                 .replace("demo-observability-app", applicationName)

@@ -1,0 +1,78 @@
+# Production Profile Configuration
+# This configuration is automatically activated when spring.profiles.active=prod
+
+observability:
+  enabled: true
+
+  tracing:
+    # Sample 10% of traces in production to reduce overhead
+    sampling-probability: 0.1
+    # Production OTLP endpoint (configure for your environment)
+    otlp-endpoint: "${OTLP_ENDPOINT:http://localhost:4318/v1/traces}"
+    timeout-seconds: 10
+    connect-timeout-seconds: 10
+
+  logging:
+    json-enabled: true
+    format: ecs  # ECS format recommended for production with Elastic Stack
+    include-trace-id: true
+    include-span-id: true
+
+  metrics:
+    enabled: true
+    jvm-enabled: true
+    http-enabled: true
+    database-enabled: true
+    # Standard SLO buckets for production
+    http-slo-millis: [50, 100, 200, 500, 1000, 2000, 5000]
+
+  stack-export:
+    # Disable export endpoints in production for security
+    enabled: false
+    export-path: "/opt/monitoring"
+    export-on-startup: false
+    personalize-config: true
+
+# Actuator endpoints - only expose necessary endpoints in production
+management:
+  endpoints:
+    web:
+      exposure:
+        # Only expose health and prometheus in production
+        include: "health,prometheus"
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+
+# Logging configuration for production
+logging:
+  level:
+    com.imadattar.observability: INFO
+    root: WARN
+
+# Security: Enable HTTPS only
+server:
+  ssl:
+    enabled: "${SSL_ENABLED:false}"
+
+# Additional production hardening recommendations (commented out - configure as needed)
+#
+# Rate limiting for actuator endpoints:
+# bucket4j:
+#   enabled: true
+#   filters:
+#     - cache-name: rate-limit-buckets
+#       url: /actuator/.*
+#       rate-limits:
+#         - bandwidths:
+#             - capacity: 100
+#               time: 1
+#               unit: hours
+#
+# Spring Security for actuator endpoints:
+# spring:
+#   security:
+#     user:
+#       name: ${ACTUATOR_USERNAME}
+#       password: ${ACTUATOR_PASSWORD}

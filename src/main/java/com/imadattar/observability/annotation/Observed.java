@@ -30,6 +30,8 @@ import java.lang.annotation.*;
  * - Create Prometheus metrics: user_service_create_seconds_count, user_service_create_seconds_sum
  * - Create distributed trace span
  * - Log execution with trace ID
+ *
+ * @since 1.0.0
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

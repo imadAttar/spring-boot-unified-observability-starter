@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
  * For Spring Boot 3.4+ users who prefer native ECS logging, use {@code observability.logging.format=ecs}.
  *
  * @see EcsLoggingConfiguration
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnExpression(

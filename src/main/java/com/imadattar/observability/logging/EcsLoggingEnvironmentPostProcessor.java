@@ -26,6 +26,7 @@ import java.util.Map;
  * </ul>
  *
  * @see <a href="https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.structured">Spring Boot Structured Logging</a>
+ * @since 1.0.0
  */
 public class EcsLoggingEnvironmentPostProcessor implements EnvironmentPostProcessor {
 

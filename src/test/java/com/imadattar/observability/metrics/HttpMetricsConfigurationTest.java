@@ -1,9 +1,11 @@
 package com.imadattar.observability.metrics;
 
+import com.imadattar.observability.config.ObservabilityProperties;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import java.time.Duration;
@@ -16,7 +18,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 class HttpMetricsConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-        .withConfiguration(AutoConfigurations.of(HttpMetricsConfiguration.class));
+        .withConfiguration(AutoConfigurations.of(
+            HttpMetricsConfiguration.class,
+            TestConfig.class
+        ));
+
+    @EnableConfigurationProperties(ObservabilityProperties.class)
+    static class TestConfig {
+    }
 
     @Test
     void testCustomizerBeanCreatedWhenEnabled() {

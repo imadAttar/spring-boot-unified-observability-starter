@@ -31,6 +31,7 @@ import org.springframework.core.env.Environment;
  * @see EcsLoggingEnvironmentPostProcessor
  * @see <a href="https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.structured">Spring Boot Structured Logging</a>
  * @see <a href="https://www.elastic.co/guide/en/ecs/current/index.html">Elastic Common Schema</a>
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnExpression(

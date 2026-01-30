@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - DistributionSummary: For measuring distributions (order values, file sizes)
  *
  * These examples can be used as templates for implementing domain-specific metrics.
+ *
+ * @since 1.0.0
  */
 @Service
 @ConditionalOnProperty(prefix = "observability.metrics", name = "custom-enabled", havingValue = "true")

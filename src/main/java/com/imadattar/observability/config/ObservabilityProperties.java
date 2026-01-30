@@ -7,6 +7,8 @@ import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for Unified Observability Starter.
+ *
+ * @since 1.0.0
  */
 @Data
 @Validated
@@ -71,6 +73,12 @@ public class ObservabilityProperties {
         private boolean databaseEnabled = true;
 
         /**
+         * HTTP SLO buckets in milliseconds for latency measurements.
+         * Default: [10, 50, 100, 200, 500, 1000, 2000, 5000]
+         */
+        private double[] httpSloMillis = {10, 50, 100, 200, 500, 1000, 2000, 5000};
+
+        /**
          * Enable custom business metrics.
          */
         private boolean customEnabled = true;
@@ -107,6 +115,18 @@ public class ObservabilityProperties {
          * Enable trace propagation in HTTP headers.
          */
         private boolean propagationEnabled = true;
+
+        /**
+         * OTLP exporter timeout in seconds.
+         * Default: 10 seconds
+         */
+        private long timeoutSeconds = 10;
+
+        /**
+         * OTLP exporter connection timeout in seconds.
+         * Default: 10 seconds
+         */
+        private long connectTimeoutSeconds = 10;
     }
 
     @Data

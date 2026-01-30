@@ -19,6 +19,8 @@ import org.springframework.context.annotation.Import;
  * - HTTP metrics (requests, responses, latency) via HttpMetricsConfiguration
  * - Database metrics (connection pool, query performance) via DatabaseMetricsConfiguration
  * - Custom business metrics examples via CustomMetricsExamples
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(prefix = "observability.metrics", name = "enabled", havingValue = "true", matchIfMissing = true)

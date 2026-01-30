@@ -1,0 +1,51 @@
+# Development Profile Configuration
+# This configuration is automatically activated when spring.profiles.active=dev
+
+observability:
+  enabled: true
+
+  tracing:
+    # Sample 100% of traces in development for complete visibility
+    sampling-probability: 1.0
+    # Development OTLP endpoint (local Jaeger)
+    otlp-endpoint: "http://localhost:4318/v1/traces"
+    timeout-seconds: 30
+    connect-timeout-seconds: 30
+
+  logging:
+    json-enabled: true
+    format: json  # or ecs for Spring Boot 3.4+
+    include-trace-id: true
+    include-span-id: true
+
+  metrics:
+    enabled: true
+    jvm-enabled: true
+    http-enabled: true
+    database-enabled: true
+    # More granular SLO buckets for development analysis
+    http-slo-millis: [10, 25, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 3000, 5000]
+
+  stack-export:
+    # Enable export in development for easy dashboard access
+    enabled: true
+    export-path: "./monitoring"
+    export-on-startup: false
+    personalize-config: true
+
+# Actuator endpoints - expose all in development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
+# Logging configuration for development
+logging:
+  level:
+    com.imadattar.observability: DEBUG
+    root: INFO

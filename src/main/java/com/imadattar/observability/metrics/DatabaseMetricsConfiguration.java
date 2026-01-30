@@ -22,6 +22,8 @@ import javax.sql.DataSource;
  * - Connection timeout count
  *
  * Note: Requires HikariCP to be on the classpath and used as the DataSource implementation.
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(prefix = "observability.metrics", name = "database-enabled", havingValue = "true", matchIfMissing = true)

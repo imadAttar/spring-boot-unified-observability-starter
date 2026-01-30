@@ -24,6 +24,8 @@ import java.util.function.Supplier;
  *     });
  * }
  * </pre>
+ *
+ * @since 1.0.0
  */
 @RequiredArgsConstructor
 @Slf4j

@@ -21,13 +21,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 
 import jakarta.annotation.PreDestroy;
+import java.time.Duration;
 
 /**
  * Auto-configuration for Unified Observability Starter.
@@ -39,6 +42,8 @@ import jakarta.annotation.PreDestroy;
  * - Grafana dashboard integration
  *
  * Includes proper resource cleanup via @PreDestroy to prevent resource leaks.
+ *
+ * @since 1.0.0
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ObservabilityProperties.class)
@@ -75,15 +80,20 @@ public class ObservabilityAutoConfiguration {
      */
     @Bean
     @ConditionalOnProperty(prefix = "observability.metrics", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags(ObservabilityProperties properties) {
+    public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags(
+            ObservabilityProperties properties,
+            Environment environment) {
+        String[] activeProfiles = environment.getActiveProfiles();
+        String activeEnvironment = activeProfiles.length > 0 ? activeProfiles[0] : "default";
+
         return registry -> {
             registry.config().commonTags(
                 "service", properties.getTracing().getServiceName(),
-                "environment", System.getProperty("spring.profiles.active", "default")
+                "environment", activeEnvironment
             );
             log.info("✅ Metrics common tags configured: service={}, environment={}",
                 properties.getTracing().getServiceName(),
-                System.getProperty("spring.profiles.active", "default"));
+                activeEnvironment);
         };
     }
 
@@ -100,9 +110,11 @@ public class ObservabilityAutoConfiguration {
 
         ObservabilityProperties.Tracing tracingConfig = properties.getTracing();
 
-        // Configure OTLP exporter - store reference for cleanup
+        // Configure OTLP exporter with timeouts - store reference for cleanup
         this.spanExporter = OtlpGrpcSpanExporter.builder()
             .setEndpoint(tracingConfig.getOtlpEndpoint())
+            .setTimeout(Duration.ofSeconds(tracingConfig.getTimeoutSeconds()))
+            .setConnectTimeout(Duration.ofSeconds(tracingConfig.getConnectTimeoutSeconds()))
             .build();
 
         // Configure tracer provider with sampling - store reference for cleanup

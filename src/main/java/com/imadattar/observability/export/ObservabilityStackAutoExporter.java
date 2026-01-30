@@ -25,6 +25,8 @@ import java.nio.file.Paths;
  *     export-path: ./monitoring
  *     personalize-config: true
  * }</pre>
+ *
+ * @since 1.0.0
  */
 @Component
 @RequiredArgsConstructor

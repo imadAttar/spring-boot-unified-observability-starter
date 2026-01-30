@@ -19,6 +19,8 @@ import org.springframework.context.annotation.Configuration;
  * - Thread metrics (live, daemon, peak)
  * - Class loader metrics (loaded, unloaded)
  * - CPU metrics (system, process)
+ *
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnProperty(prefix = "observability.metrics", name = "jvm-enabled", havingValue = "true", matchIfMissing = true)
