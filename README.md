@@ -92,7 +92,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.imadAttar:spring-boot-unified-observability-starter:1.0.0'
+    implementation 'com.github.imadAttar:spring-boot-unified-observability-starter:1.2.0'
 }
 ```
 
