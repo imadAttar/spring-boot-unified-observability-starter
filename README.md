@@ -34,7 +34,7 @@
 <dependency>
     <groupId>com.github.imadAttar</groupId>
     <artifactId>spring-boot-unified-observability-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
@@ -80,7 +80,7 @@ This starter is ideal if you're looking for:
 <dependency>
     <groupId>com.github.imadAttar</groupId>
     <artifactId>spring-boot-unified-observability-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
