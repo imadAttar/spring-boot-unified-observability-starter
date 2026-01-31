@@ -9,6 +9,14 @@
 
 **Zero-configuration observability for Spring Boot 3.x**: Production-ready metrics, traces, and logs in a single dependency.
 
+## 🎯 Why This Starter?
+
+Built and battle-tested across multiple production projects to solve a recurring problem: **setting up observability takes too much time**.
+
+Instead of spending hours configuring Prometheus, Grafana, OpenTelemetry, and creating dashboards for every new project, this starter provides everything pre-configured and ready to use.
+
+**One dependency → Full observability stack**
+
 ## 🚨 Problem → Solution
 
 ### Before (Complex Setup)
@@ -26,7 +34,7 @@
 <!-- + manual Grafana dashboards, Prometheus config, alerts... -->
 ```
 
-**Result**: ⏱️ 2-4 hours setup • 🐛 Version conflicts • 😓 60% time wasted debugging
+**Result**: Hours of setup, version conflicts, manual dashboard creation
 
 ### After (Zero Config)
 
@@ -38,7 +46,7 @@
 </dependency>
 ```
 
-**Result**: ✅ 5 minutes setup • ✅ 89% MTTR reduction • ✅ Production-ready
+**Result**: Everything configured automatically in minutes
 
 ## ✨ What You Get
 
@@ -60,7 +68,6 @@ This starter is ideal if you're looking for:
 - **Production-ready observability** for Spring Boot in Kubernetes
 - **Distributed tracing** with automatic trace-log correlation
 - **Spring Boot application performance monitoring** (APM)
-- **Reduce MTTR** in Spring Boot microservices architecture
 - **Zero-config observability** for rapid development
 
 ## 🚀 Quick Start
@@ -163,20 +170,6 @@ monitoring/
 | **Tracing** | Distributed traces, service latency |
 | **Alerts** | Active alerts, history |
 
-## 🎯 Key Benefits
-
-### 89% MTTR Reduction
-From 45 minutes to 5 minutes for incident resolution (real production data)
-
-### Zero Manual Configuration
-Everything works out of the box with sensible defaults
-
-### Production-Ready
-20 critical alerts, 8 dashboards, complete Docker Compose setup included
-
-### Flexible Path Configuration
-Supports relative paths (`./monitoring`), absolute paths (`/opt/monitoring`), home directory (`~/monitoring`), and environment variables (`${MONITORING_PATH}`)
-
 ## 💻 Code Example
 
 ```java
@@ -202,16 +195,6 @@ public class UserService {
 - ✅ OpenTelemetry traces with correlation
 - ✅ JSON logs with automatic `trace_id` and `span_id`
 - ✅ Real-time Grafana dashboards updated
-
-## 📚 Documentation
-
-- [📖 Getting Started Guide](docs/getting-started.md) - Detailed setup instructions
-- [🔧 Configuration Reference](docs/configuration.md) - All configuration options
-- [📊 Dashboards Guide](docs/dashboards.md) - Dashboard customization
-- [🚨 Alerting Rules](src/main/resources/prometheus-alerts/README.md) - Alert configuration
-- [🐳 Docker Setup](docs/docker.md) - Docker Compose details
-- [☸️ Kubernetes Deployment](docs/kubernetes.md) - K8s integration
-- [🎯 Case Studies](docs/case-studies.md) - Real-world use cases
 
 ## 🔧 Configuration Options
 
@@ -259,6 +242,78 @@ observability:
     include-trace-id: true
 ```
 
+## 🔐 Security & Production Deployment
+
+### ⚠️ Important: Endpoint Security
+
+This starter follows **the same philosophy as all Spring Boot starters**:
+- ❌ **No security enforced by default**
+- ✅ **YOU are responsible for securing according to your needs**
+
+**Just like**:
+- `spring-boot-starter-actuator` exposes `/actuator` without security
+- `spring-boot-starter-web` has no authentication by default
+- `spring-boot-starter-data-rest` exposes APIs without protection
+
+### 🔒 Securing Export Endpoints (Production)
+
+Export endpoints `/actuator/observability/export` are **public by default** for development convenience.
+
+**Option 1: Disable in production**
+```yaml
+observability:
+  stack-export:
+    enabled: false  # Disable export endpoints
+```
+
+**Option 2: Add Spring Security**
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+```java
+@Configuration
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) {
+        http.authorizeHttpRequests(auth -> auth
+            .requestMatchers("/actuator/observability/**").hasRole("ADMIN")
+            .anyRequest().permitAll()
+        );
+        return http.build();
+    }
+}
+```
+
+**Option 3: Spring Boot Actuator Security**
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus  # Exclude observability
+```
+
+### 📋 Production Checklist
+
+- [ ] Disable `stack-export.enabled` in production OR add authentication
+- [ ] Change Grafana default credentials (admin/admin)
+- [ ] Configure `tracing.sampling-probability` to 0.1 (10%) in production
+- [ ] Secure `/actuator/prometheus` with Spring Security if needed
+- [ ] Validate logs don't contain sensitive data
+
+### 💡 Why No Security by Default?
+
+1. **Flexibility**: Every organization has different requirements (OAuth2, LDAP, JWT, etc.)
+2. **Compatibility**: Don't force unnecessary security dependencies
+3. **Spring Boot Standard**: All official starters work this way
+4. **Fast Development**: Zero friction in dev, security in production
+
+> 🎯 **This starter is a tool, not a complete application**. Security is YOUR responsibility, as with any Spring Boot starter.
+
 ## ❓ FAQ
 
 ### How do I monitor a Spring Boot application?
@@ -273,9 +328,6 @@ OpenTelemetry is auto-configured. Every HTTP request, database query, and log en
 ### How to monitor Spring Boot microservices in production?
 This starter provides production-ready monitoring: 8 Grafana dashboards, 20 Prometheus alerts, distributed tracing, and structured logging.
 
-### How to reduce MTTR in Spring Boot applications?
-Automatic trace-log correlation reduces incident resolution from 45 minutes to 5 minutes. Every log entry includes trace_id and span_id for instant debugging.
-
 ### How to monitor database connection pools in Spring Boot?
 HikariCP metrics are auto-configured: active connections, idle connections, pending threads, and connection wait time.
 
@@ -285,21 +337,11 @@ Dashboards are auto-exported to `./monitoring` directory on startup. Import them
 ### Does this work with Spring Boot 3.x?
 Yes, specifically designed for Spring Boot 3.x with native OpenTelemetry support.
 
-## 🆚 Comparison
-
-| Feature | Actuator + Micrometer | DataDog | **unified-observability** |
-|---------|----------------------|---------|---------------------------|
-| Setup Time | 2-3 hours | 1 hour | **5 minutes** ⚡ |
-| Cost | Free | $200+/month | **Free** ✅ |
-| Dashboards | Manual | ✅ | **8 auto-exported** ✅ |
-| Alerts | Manual | ✅ | **20 included** ✅ |
-| Vendor Lock-in | ❌ | ⚠️ Yes | ❌ Open-source |
-
 ## ✅ Quality & Testing
 
 ### Production-Ready
 
-This starter is thoroughly tested and validated for production use:
+This starter is thoroughly tested and validated:
 
 - **124 tests** with 100% pass rate (Unit, Integration, Security, Performance, E2E)
 - **Zero** critical security vulnerabilities
@@ -345,12 +387,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👤 Author
 
 **Imad ATTAR**
-Senior Java Architect | Observability Expert
 
 - 💼 [LinkedIn](https://linkedin.com/in/imad-attar-ba130389)
 - 🐙 [GitHub](https://github.com/imadAttar)
-
-> *Inspired by real production systems where this starter reduced MTTR from 45 minutes to 5 minutes (-89%)*
 
 ## 🙏 Acknowledgments
 

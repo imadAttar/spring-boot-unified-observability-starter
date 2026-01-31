@@ -131,11 +131,11 @@ echo "🚀 Étape 9: Artifact Validation"
 echo "--------------------------------"
 
 # Test 12: Vérifier que le JAR est créé
-run_test "JAR artifact created" "[ -f target/spring-boot-unified-observability-starter-1.0.0.jar ]"
+run_test "JAR artifact created" "[ -f target/spring-boot-unified-observability-starter-1.2.0.jar ]"
 
 # Test 13: Vérifier la taille du JAR (doit être < 10MB)
-if [ -f target/spring-boot-unified-observability-starter-1.0.0.jar ]; then
-    JAR_SIZE=$(du -k target/spring-boot-unified-observability-starter-1.0.0.jar | cut -f1)
+if [ -f target/spring-boot-unified-observability-starter-1.2.0.jar ]; then
+    JAR_SIZE=$(du -k target/spring-boot-unified-observability-starter-1.2.0.jar | cut -f1)
     if [ $JAR_SIZE -lt 10240 ]; then
         run_test "JAR size reasonable (<10MB)" "true"
     else
