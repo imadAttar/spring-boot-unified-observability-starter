@@ -36,11 +36,6 @@ public class ObservabilityProperties {
     private Logging logging = new Logging();
 
     /**
-     * Grafana configuration.
-     */
-    private Grafana grafana = new Grafana();
-
-    /**
      * Stack export configuration.
      */
     private StackExport stackExport = new StackExport();
@@ -173,21 +168,6 @@ public class ObservabilityProperties {
          * Log level.
          */
         private String level = "INFO";
-    }
-
-    /**
-     * @deprecated Grafana API auto-import is not yet implemented.
-     * Use the stack export feature instead to get pre-built dashboards.
-     * This configuration will be removed or implemented in a future version.
-     */
-    @Data
-    @Deprecated
-    public static class Grafana {
-        private boolean enabled = false;
-        private String url = "http://localhost:3000";
-        private String apiKey;
-        private boolean autoImport = false;
-        private String folderName = "Spring Boot Observability";
     }
 
     @Data

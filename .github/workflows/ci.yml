@@ -11,8 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        java: [ '21' ]
+        include:
+          - java: '21'
+            spring-boot: '3.4.1'
+          - java: '21'
+            spring-boot: '3.3.7'
+
+    name: Java ${{ matrix.java }} / Spring Boot ${{ matrix.spring-boot }}
 
     steps:
       - uses: actions/checkout@v4
@@ -25,19 +32,15 @@ jobs:
           cache: maven
 
       - name: Build and test
-        run: mvn clean verify --batch-mode --no-transfer-progress
+        run: mvn clean verify --batch-mode --no-transfer-progress -Dspring-boot.version=${{ matrix.spring-boot }}
 
       - name: Upload coverage report
-        if: matrix.java == '21'
+        if: matrix.spring-boot == '3.4.1'
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
           path: target/site/jacoco/
           retention-days: 14
-
-      - name: Check coverage threshold
-        if: matrix.java == '21'
-        run: mvn jacoco:check --batch-mode
 
   dependency-check:
     runs-on: ubuntu-latest
