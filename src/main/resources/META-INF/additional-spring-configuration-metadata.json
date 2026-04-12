@@ -1,0 +1,211 @@
+{
+  "groups": [
+    {
+      "name": "observability",
+      "type": "com.imadattar.observability.config.ObservabilityProperties",
+      "description": "Unified observability configuration for metrics, tracing, logging, and monitoring stack export."
+    },
+    {
+      "name": "observability.metrics",
+      "type": "com.imadattar.observability.config.ObservabilityProperties$Metrics",
+      "description": "Prometheus metrics configuration."
+    },
+    {
+      "name": "observability.tracing",
+      "type": "com.imadattar.observability.config.ObservabilityProperties$Tracing",
+      "description": "OpenTelemetry distributed tracing configuration."
+    },
+    {
+      "name": "observability.logging",
+      "type": "com.imadattar.observability.config.ObservabilityProperties$Logging",
+      "description": "Structured logging configuration (JSON or ECS format)."
+    },
+    {
+      "name": "observability.stack-export",
+      "type": "com.imadattar.observability.config.ObservabilityProperties$StackExport",
+      "description": "Monitoring stack export configuration (Grafana dashboards, Prometheus config, Docker Compose)."
+    }
+  ],
+  "properties": [
+    {
+      "name": "observability.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable or disable all observability features globally.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.metrics.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Prometheus metrics collection (JVM, HTTP, database).",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.metrics.jvm-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable JVM metrics: memory, GC, threads, class loader, processor.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.metrics.http-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable HTTP request metrics with percentiles (p50, p95, p99) and SLO buckets.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.metrics.database-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable HikariCP connection pool metrics. Requires HikariCP on classpath.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.metrics.http-slo-millis",
+      "type": "double[]",
+      "description": "HTTP SLO bucket boundaries in milliseconds for latency histograms.",
+      "defaultValue": [10, 50, 100, 200, 500, 1000, 2000, 5000]
+    },
+    {
+      "name": "observability.tracing.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable OpenTelemetry distributed tracing. Requires opentelemetry-sdk on classpath.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.tracing.otlp-endpoint",
+      "type": "java.lang.String",
+      "description": "OTLP gRPC exporter endpoint for sending traces to Jaeger, Tempo, or other backends.",
+      "defaultValue": "http://localhost:4318/v1/traces"
+    },
+    {
+      "name": "observability.tracing.sampling-probability",
+      "type": "java.lang.Double",
+      "description": "Trace sampling probability (0.0 to 1.0). Use 1.0 for development, 0.1 for production.",
+      "defaultValue": 1.0
+    },
+    {
+      "name": "observability.tracing.service-name",
+      "type": "java.lang.String",
+      "description": "Service name for traces and metrics tags. Alphanumeric, hyphens, underscores only.",
+      "defaultValue": "spring-boot-app"
+    },
+    {
+      "name": "observability.tracing.propagation-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable trace context propagation via W3C Trace Context and B3 headers.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.tracing.timeout-seconds",
+      "type": "java.lang.Long",
+      "description": "OTLP exporter request timeout in seconds.",
+      "defaultValue": 10
+    },
+    {
+      "name": "observability.tracing.connect-timeout-seconds",
+      "type": "java.lang.Long",
+      "description": "OTLP exporter connection timeout in seconds.",
+      "defaultValue": 10
+    },
+    {
+      "name": "observability.logging.json-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable structured logging output.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.logging.format",
+      "type": "java.lang.String",
+      "description": "Structured logging format: 'json' (Logstash, default) or 'ecs' (Elastic Common Schema, Spring Boot 3.4+).",
+      "defaultValue": "json"
+    },
+    {
+      "name": "observability.logging.include-trace-id",
+      "type": "java.lang.Boolean",
+      "description": "Include OpenTelemetry trace ID in structured log output for correlation.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.logging.include-span-id",
+      "type": "java.lang.Boolean",
+      "description": "Include OpenTelemetry span ID in structured log output for correlation.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.logging.include-mdc",
+      "type": "java.lang.Boolean",
+      "description": "Include MDC (Mapped Diagnostic Context) entries in structured log output.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.logging.level",
+      "type": "java.lang.String",
+      "description": "Default log level for observability components.",
+      "defaultValue": "INFO"
+    },
+    {
+      "name": "observability.stack-export.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable monitoring stack export feature (REST API + auto-export).",
+      "defaultValue": false
+    },
+    {
+      "name": "observability.stack-export.export-path",
+      "type": "java.lang.String",
+      "description": "Path where monitoring files are exported. Supports: relative (./), absolute (/opt/), home (~/), env vars (${VAR}).",
+      "defaultValue": "./monitoring"
+    },
+    {
+      "name": "observability.stack-export.personalize-config",
+      "type": "java.lang.Boolean",
+      "description": "Customize exported configs with service name, environment, and team placeholders.",
+      "defaultValue": true
+    },
+    {
+      "name": "observability.stack-export.export-on-startup",
+      "type": "java.lang.Boolean",
+      "description": "Automatically export monitoring stack when the application starts.",
+      "defaultValue": false
+    }
+  ],
+  "hints": [
+    {
+      "name": "observability.logging.format",
+      "values": [
+        {
+          "value": "json",
+          "description": "Logstash JSON format. Compatible with ELK stack and general log aggregation. Requires logstash-logback-encoder."
+        },
+        {
+          "value": "ecs",
+          "description": "Elastic Common Schema format. Uses Spring Boot 3.4+ native structured logging. No external dependency needed."
+        }
+      ]
+    },
+    {
+      "name": "observability.tracing.sampling-probability",
+      "values": [
+        {
+          "value": 1.0,
+          "description": "Sample all traces (development)."
+        },
+        {
+          "value": 0.1,
+          "description": "Sample 10% of traces (production recommended)."
+        },
+        {
+          "value": 0.01,
+          "description": "Sample 1% of traces (high-traffic production)."
+        }
+      ]
+    },
+    {
+      "name": "observability.logging.level",
+      "values": [
+        { "value": "TRACE" },
+        { "value": "DEBUG" },
+        { "value": "INFO" },
+        { "value": "WARN" },
+        { "value": "ERROR" }
+      ]
+    }
+  ]
+}
