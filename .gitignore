@@ -73,9 +73,6 @@ CLAUDE.md
 .cursor/
 .cursorrules
 
-# Test application (local testing only)
-test-app/
-
 # Test artifacts
 %252e%252e%252fetc/
 %2e%2e%2f%2e%2e%2fetc/

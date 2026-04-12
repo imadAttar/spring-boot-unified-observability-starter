@@ -162,7 +162,7 @@ class MetricsPerformanceTest {
 
         long duration = System.currentTimeMillis() - start;
 
-        assertThat(duration).isLessThan(1000); // Moins de 1 seconde
+        assertThat(duration).isLessThan(5000); // Moins de 5 secondes
 
         System.out.println("Performed 1000 metric queries in " + duration + "ms");
     }

@@ -1,0 +1,210 @@
+{
+  "title": "Spring Boot - Log & Trace Correlation",
+  "tags": [
+    "spring-boot",
+    "logs",
+    "tracing",
+    "correlation",
+    "observability"
+  ],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate by Status",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count[5m])) by (status)",
+          "legendFormat": "HTTP {{status}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "title": "Error Rate (5xx)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m]))",
+          "legendFormat": "5xx errors/s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Latency by Endpoint (p95)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))",
+          "legendFormat": "p95 {{uri}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 4,
+      "title": "Trace Span Duration Distribution",
+      "description": "Distribution of span durations from OpenTelemetry. Requires Jaeger/Tempo datasource.",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket[5m])) by (le, span_name))",
+          "legendFormat": "p95 {{span_name}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "id": 5,
+      "title": "Slow Requests (> 1s)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_bucket{le=\"1.0\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))",
+          "legendFormat": "% under 1s"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 0.9, "color": "yellow" },
+              { "value": 0.95, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Error Correlation - Exceptions by Type",
+      "description": "Count of exceptions by type, correlated with HTTP 5xx responses.",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) by (exception)",
+          "legendFormat": "{{exception}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 18,
+        "y": 16
+      }
+    },
+    {
+      "id": 7,
+      "title": "Active Traces (Estimated)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count[1m]))",
+          "legendFormat": "req/s"
+        }
+      ],
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Service Map - Upstream/Downstream Latency",
+      "description": "Compare internal processing time vs downstream call latency. Requires http.client.requests metric from RestTemplate/WebClient.",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))",
+          "legendFormat": "Inbound p95"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_client_requests_seconds_bucket[5m])) by (le))",
+          "legendFormat": "Outbound p95"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 24
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "query": "label_values(http_server_requests_seconds_count, service)",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "includeAll": true
+      },
+      {
+        "name": "environment",
+        "type": "query",
+        "query": "label_values(http_server_requests_seconds_count, environment)",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "includeAll": true
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "10s"
+}

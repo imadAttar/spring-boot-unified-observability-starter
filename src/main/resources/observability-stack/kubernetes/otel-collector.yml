@@ -1,0 +1,104 @@
+# OpenTelemetry Collector deployment for Kubernetes
+# Receives traces from Spring Boot apps and forwards to Jaeger/Tempo
+#
+# Usage:
+#   kubectl apply -f otel-collector.yml
+#
+# Spring Boot config:
+#   observability.tracing.otlp-endpoint: http://otel-collector.monitoring:4317
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: monitoring
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 5s
+        send_batch_size: 1024
+
+    exporters:
+      # Forward to Jaeger
+      otlp/jaeger:
+        endpoint: jaeger-collector.monitoring:4317
+        tls:
+          insecure: true
+
+      # Uncomment for Tempo
+      # otlp/tempo:
+      #   endpoint: tempo.monitoring:4317
+      #   tls:
+      #     insecure: true
+
+      logging:
+        loglevel: info
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp/jaeger, logging]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:latest
+          args: ["--config=/etc/otel/config.yaml"]
+          ports:
+            - containerPort: 4317  # gRPC
+            - containerPort: 4318  # HTTP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 100m
+            limits:
+              memory: 256Mi
+              cpu: 250m
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: monitoring
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - name: grpc
+      port: 4317
+      targetPort: 4317
+    - name: http
+      port: 4318
+      targetPort: 4318

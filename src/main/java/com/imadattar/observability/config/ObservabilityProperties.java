@@ -36,11 +36,6 @@ public class ObservabilityProperties {
     private Logging logging = new Logging();
 
     /**
-     * Grafana configuration.
-     */
-    private Grafana grafana = new Grafana();
-
-    /**
      * Stack export configuration.
      */
     private StackExport stackExport = new StackExport();
@@ -79,9 +74,11 @@ public class ObservabilityProperties {
         private double[] httpSloMillis = {10, 50, 100, 200, 500, 1000, 2000, 5000};
 
         /**
-         * Enable custom business metrics.
+         * @deprecated Custom metrics examples have been moved to test sources.
+         * Implement your own business metrics by creating a @Service with MeterRegistry.
          */
-        private boolean customEnabled = true;
+        @Deprecated
+        private boolean customEnabled = false;
     }
 
     @Data
@@ -95,7 +92,7 @@ public class ObservabilityProperties {
          * OpenTelemetry exporter endpoint.
          */
         @NotBlank(message = "OTLP endpoint cannot be blank")
-        private String otlpEndpoint = "http://localhost:4318/v1/traces";
+        private String otlpEndpoint = "http://localhost:4317";
 
         /**
          * Sampling probability (0.0 to 1.0).
@@ -171,34 +168,6 @@ public class ObservabilityProperties {
          * Log level.
          */
         private String level = "INFO";
-    }
-
-    @Data
-    public static class Grafana {
-        /**
-         * Enable Grafana dashboard auto-import.
-         */
-        private boolean enabled = true;
-
-        /**
-         * Grafana server URL.
-         */
-        private String url = "http://localhost:3000";
-
-        /**
-         * Grafana API key.
-         */
-        private String apiKey;
-
-        /**
-         * Auto-import dashboards on startup.
-         */
-        private boolean autoImport = false;
-
-        /**
-         * Dashboard folder name.
-         */
-        private String folderName = "Spring Boot Observability";
     }
 
     @Data

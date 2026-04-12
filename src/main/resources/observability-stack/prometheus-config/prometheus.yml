@@ -1,75 +1,55 @@
-# Configuration Prometheus pour Spring Boot Unified Observability Starter
-# Ce fichier configure Prometheus pour collecter les métriques de votre application
+# Prometheus Configuration for Spring Boot Unified Observability Starter
 
 global:
-  # Intervalle de collecte des métriques
   scrape_interval: 15s
-
-  # Intervalle d'évaluation des règles d'alerting
   evaluation_interval: 15s
-
-  # Labels externes ajoutés à toutes les métriques
   external_labels:
     monitor: 'spring-boot-observability'
     cluster: 'local'
 
-# Configuration Alertmanager (optionnel)
+# Alertmanager (enable with: docker compose --profile alerting up -d)
 alerting:
   alertmanagers:
     - static_configs:
         - targets:
-          # - 'localhost:9093'  # Décommenter si vous utilisez Alertmanager
+          - 'alertmanager:9093'
 
-# Fichiers de règles d'alerting
+# Alert rules
 rule_files:
   - '/etc/prometheus/rules/*.yml'
-  # Les 20 règles d'alerting sont dans spring-boot-alerts.yml
 
-# Configuration du scraping (collecte des métriques)
+# Scrape configuration
 scrape_configs:
 
-  # Job 1: Prometheus lui-même
+  # Prometheus self-monitoring
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
         labels:
           service: 'prometheus'
-          environment: 'local'
 
-  # Job 2: Application Spring Boot de Démo
+  # Spring Boot application
+  # Adjust the target to match your setup:
+  #   Docker (Mac/Windows): host.docker.internal:8080
+  #   Docker (Linux):       172.17.0.1:8080
+  #   Kubernetes:           my-service.default.svc:8080
+  #   Local (no Docker):    localhost:8080
   - job_name: 'spring-boot-demo'
     metrics_path: '/actuator/prometheus'
-    scrape_interval: 10s  # Collecte plus fréquente pour la démo
+    scrape_interval: 10s
     static_configs:
-      - targets: ['host.docker.internal:8080']  # Pour Docker
-        # - targets: ['localhost:8080']  # Décommenter si Prometheus n'est pas dans Docker
+      - targets: ['host.docker.internal:8080']
         labels:
           service: 'demo-app'
           application: 'demo-observability-app'
           environment: 'development'
           team: 'platform'
 
-  # Job 3: Autres applications Spring Boot (Exemple)
-  # - job_name: 'my-production-app'
+  # Additional Spring Boot instances (uncomment and adjust)
+  # - job_name: 'my-other-service'
   #   metrics_path: '/actuator/prometheus'
   #   static_configs:
-  #     - targets: ['production-server:8080']
+  #     - targets: ['host.docker.internal:8081']
   #       labels:
-  #         service: 'my-service'
-  #         environment: 'production'
-  #         version: '1.0.0'
-
-  # Job 4: Multiple instances (Load Balanced)
-  # - job_name: 'my-app-cluster'
-  #   metrics_path: '/actuator/prometheus'
-  #   static_configs:
-  #     - targets:
-  #       - 'app-instance-1:8080'
-  #       - 'app-instance-2:8080'
-  #       - 'app-instance-3:8080'
-  #       labels:
-  #         service: 'my-app'
-  #         environment: 'production'
-
-# Note: Configuration du stockage (retention) se fait via les flags de commande dans docker-compose.yml
-# Voir docker-compose.yml: --storage.tsdb.retention.time=15d
+  #         service: 'my-other-service'
+  #         environment: 'development'

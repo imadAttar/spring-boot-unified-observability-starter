@@ -1,13 +1,22 @@
 # 📊 Spring Boot Unified Observability Starter
 
-[![Java](https://img.shields.io/badge/Java-21-orange)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-brightgreen)](https://spring.io/projects/spring-boot)
+[![CI](https://github.com/imadAttar/spring-boot-unified-observability-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/imadAttar/spring-boot-unified-observability-starter/actions/workflows/ci.yml)
+[![Java](https://img.shields.io/badge/Java-21+-orange)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4+-brightgreen)](https://spring.io/projects/spring-boot)
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-enabled-blue)](https://opentelemetry.io/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-ready-red)](https://prometheus.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![JitPack](https://jitpack.io/v/imadAttar/spring-boot-unified-observability-starter.svg)](https://jitpack.io/#imadAttar/spring-boot-unified-observability-starter)
 
 **Zero-configuration observability for Spring Boot 3.x**: Production-ready metrics, traces, and logs in a single dependency.
+
+## 🎯 Why This Starter?
+
+Built and battle-tested across multiple production projects to solve a recurring problem: **setting up observability takes too much time**.
+
+Instead of spending hours configuring Prometheus, Grafana, OpenTelemetry, and creating dashboards for every new project, this starter provides everything pre-configured and ready to use.
+
+**One dependency → Full observability stack**
 
 ## 🚨 Problem → Solution
 
@@ -26,7 +35,7 @@
 <!-- + manual Grafana dashboards, Prometheus config, alerts... -->
 ```
 
-**Result**: ⏱️ 2-4 hours setup • 🐛 Version conflicts • 😓 60% time wasted debugging
+**Result**: Hours of setup, version conflicts, manual dashboard creation
 
 ### After (Zero Config)
 
@@ -34,18 +43,18 @@
 <dependency>
     <groupId>com.github.imadAttar</groupId>
     <artifactId>spring-boot-unified-observability-starter</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
-**Result**: ✅ 5 minutes setup • ✅ 89% MTTR reduction • ✅ Production-ready
+**Result**: Everything configured automatically in minutes
 
 ## ✨ What You Get
 
 - 📈 **Auto-configured Metrics**: JVM, HTTP, Database, Custom
 - 🔍 **Distributed Tracing**: OpenTelemetry with automatic correlation
 - 📝 **Structured Logging**: JSON logs with trace IDs (Logstash or ECS format)
-- 📊 **8 Grafana Dashboards**: Auto-exported and ready to import
+- 📊 **9 Grafana Dashboards**: Auto-exported and ready to import
 - 🚨 **20 Prometheus Alerts**: Critical production alerts included
 - 🐳 **Docker Compose Stack**: Complete monitoring setup
 - ⚙️ **Flexible Export**: Monitoring stack exported automatically
@@ -60,8 +69,18 @@ This starter is ideal if you're looking for:
 - **Production-ready observability** for Spring Boot in Kubernetes
 - **Distributed tracing** with automatic trace-log correlation
 - **Spring Boot application performance monitoring** (APM)
-- **Reduce MTTR** in Spring Boot microservices architecture
 - **Zero-config observability** for rapid development
+
+## Compatibility
+
+| Component | Required | Notes |
+|---|---|---|
+| **Java** | 21+ | Compiled with `--release 21` |
+| **Spring Boot** | 3.4+ | Structured logging requires 3.4+. Metrics/tracing may work on 3.2-3.3 but are untested. |
+| **Servlet** | Supported | HTTP metrics via `DispatcherServlet` |
+| **WebFlux** | Supported | HTTP metrics via `WebFluxConfigurer` |
+
+> **Documentation**: [Getting Started](docs/getting-started.md) | [Configuration Reference](docs/configuration.md) | [Changelog](CHANGELOG.md)
 
 ## 🚀 Quick Start
 
@@ -80,7 +99,7 @@ This starter is ideal if you're looking for:
 <dependency>
     <groupId>com.github.imadAttar</groupId>
     <artifactId>spring-boot-unified-observability-starter</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -92,7 +111,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.imadAttar:spring-boot-unified-observability-starter:1.0.0'
+    implementation 'com.github.imadAttar:spring-boot-unified-observability-starter:1.3.0'
 }
 ```
 
@@ -102,9 +121,8 @@ dependencies {
 # application.yml
 observability:
   enabled: true
-  service:
-    name: ${spring.application.name}
-    environment: production
+  tracing:
+    service-name: ${spring.application.name}
   stack-export:
     enabled: true
     export-path: ./monitoring  # Relative, absolute, or ~/path
@@ -122,11 +140,12 @@ mvn spring-boot:run
 
 ```bash
 cd monitoring
-docker-compose up -d
+docker compose up -d
 
 # Access services:
 # Grafana:    http://localhost:3000 (admin/admin)
 # Prometheus: http://localhost:9090
+# Jaeger:     http://localhost:16686
 ```
 
 ## 📦 Exported Monitoring Stack
@@ -147,6 +166,7 @@ monitoring/
         ├── business-metrics.json     # Custom business metrics
         ├── application-health.json   # Health & availability
         ├── distributed-tracing.json  # Trace analysis
+        ├── log-correlation.json      # Log & trace correlation
         └── alerts-overview.json      # Active alerts dashboard
 ```
 
@@ -161,21 +181,8 @@ monitoring/
 | **Business** | Custom business metrics |
 | **Health** | Availability, error tracking |
 | **Tracing** | Distributed traces, service latency |
+| **Log Correlation** | Error correlation, SLO compliance, inbound/outbound latency |
 | **Alerts** | Active alerts, history |
-
-## 🎯 Key Benefits
-
-### 89% MTTR Reduction
-From 45 minutes to 5 minutes for incident resolution (real production data)
-
-### Zero Manual Configuration
-Everything works out of the box with sensible defaults
-
-### Production-Ready
-20 critical alerts, 8 dashboards, complete Docker Compose setup included
-
-### Flexible Path Configuration
-Supports relative paths (`./monitoring`), absolute paths (`/opt/monitoring`), home directory (`~/monitoring`), and environment variables (`${MONITORING_PATH}`)
 
 ## 💻 Code Example
 
@@ -203,16 +210,6 @@ public class UserService {
 - ✅ JSON logs with automatic `trace_id` and `span_id`
 - ✅ Real-time Grafana dashboards updated
 
-## 📚 Documentation
-
-- [📖 Getting Started Guide](docs/getting-started.md) - Detailed setup instructions
-- [🔧 Configuration Reference](docs/configuration.md) - All configuration options
-- [📊 Dashboards Guide](docs/dashboards.md) - Dashboard customization
-- [🚨 Alerting Rules](src/main/resources/prometheus-alerts/README.md) - Alert configuration
-- [🐳 Docker Setup](docs/docker.md) - Docker Compose details
-- [☸️ Kubernetes Deployment](docs/kubernetes.md) - K8s integration
-- [🎯 Case Studies](docs/case-studies.md) - Real-world use cases
-
 ## 🔧 Configuration Options
 
 ### Export Path Formats
@@ -237,12 +234,6 @@ export-path: ${MONITORING_PATH:./monitoring}
 
 ```yaml
 observability:
-  service:
-    name: my-service
-    version: 1.0.0
-    environment: production
-    team: platform-team
-
   metrics:
     enabled: true
     jvm-enabled: true
@@ -251,13 +242,87 @@ observability:
 
   tracing:
     enabled: true
+    service-name: my-service
     sampling-probability: 0.1  # 10% in production
+    otlp-endpoint: http://localhost:4317
 
   logging:
     json-enabled: true
     format: json              # Options: json (Logstash), ecs (Spring Boot 3.4+ native)
     include-trace-id: true
 ```
+
+## 🔐 Security & Production Deployment
+
+### ⚠️ Important: Endpoint Security
+
+This starter follows **the same philosophy as all Spring Boot starters**:
+- ❌ **No security enforced by default**
+- ✅ **YOU are responsible for securing according to your needs**
+
+**Just like**:
+- `spring-boot-starter-actuator` exposes `/actuator` without security
+- `spring-boot-starter-web` has no authentication by default
+- `spring-boot-starter-data-rest` exposes APIs without protection
+
+### 🔒 Securing Export Endpoints (Production)
+
+Export endpoints `/actuator/observability/export` are **public by default** for development convenience.
+
+**Option 1: Disable in production**
+```yaml
+observability:
+  stack-export:
+    enabled: false  # Disable export endpoints
+```
+
+**Option 2: Add Spring Security**
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+```java
+@Configuration
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) {
+        http.authorizeHttpRequests(auth -> auth
+            .requestMatchers("/actuator/observability/**").hasRole("ADMIN")
+            .anyRequest().permitAll()
+        );
+        return http.build();
+    }
+}
+```
+
+**Option 3: Spring Boot Actuator Security**
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus  # Exclude observability
+```
+
+### 📋 Production Checklist
+
+- [ ] Disable `stack-export.enabled` in production OR add authentication
+- [ ] Change Grafana default credentials (admin/admin)
+- [ ] Configure `tracing.sampling-probability` to 0.1 (10%) in production
+- [ ] Secure `/actuator/prometheus` with Spring Security if needed
+- [ ] Validate logs don't contain sensitive data
+
+### 💡 Why No Security by Default?
+
+1. **Flexibility**: Every organization has different requirements (OAuth2, LDAP, JWT, etc.)
+2. **Compatibility**: Don't force unnecessary security dependencies
+3. **Spring Boot Standard**: All official starters work this way
+4. **Fast Development**: Zero friction in dev, security in production
+
+> 🎯 **This starter is a tool, not a complete application**. Security is YOUR responsibility, as with any Spring Boot starter.
 
 ## ❓ FAQ
 
@@ -271,10 +336,7 @@ This starter includes Micrometer with Prometheus registry pre-configured. Metric
 OpenTelemetry is auto-configured. Every HTTP request, database query, and log entry is automatically traced and correlated.
 
 ### How to monitor Spring Boot microservices in production?
-This starter provides production-ready monitoring: 8 Grafana dashboards, 20 Prometheus alerts, distributed tracing, and structured logging.
-
-### How to reduce MTTR in Spring Boot applications?
-Automatic trace-log correlation reduces incident resolution from 45 minutes to 5 minutes. Every log entry includes trace_id and span_id for instant debugging.
+This starter provides production-ready monitoring: 9 Grafana dashboards, 20 Prometheus alerts, distributed tracing, and structured logging.
 
 ### How to monitor database connection pools in Spring Boot?
 HikariCP metrics are auto-configured: active connections, idle connections, pending threads, and connection wait time.
@@ -285,24 +347,14 @@ Dashboards are auto-exported to `./monitoring` directory on startup. Import them
 ### Does this work with Spring Boot 3.x?
 Yes, specifically designed for Spring Boot 3.x with native OpenTelemetry support.
 
-## 🆚 Comparison
-
-| Feature | Actuator + Micrometer | DataDog | **unified-observability** |
-|---------|----------------------|---------|---------------------------|
-| Setup Time | 2-3 hours | 1 hour | **5 minutes** ⚡ |
-| Cost | Free | $200+/month | **Free** ✅ |
-| Dashboards | Manual | ✅ | **8 auto-exported** ✅ |
-| Alerts | Manual | ✅ | **20 included** ✅ |
-| Vendor Lock-in | ❌ | ⚠️ Yes | ❌ Open-source |
-
 ## ✅ Quality & Testing
 
 ### Production-Ready
 
-This starter is thoroughly tested and validated for production use:
+This starter is thoroughly tested and validated:
 
-- **124 tests** with 100% pass rate (Unit, Integration, Security, Performance, E2E)
-- **Zero** critical security vulnerabilities
+- **137 tests** with 100% pass rate (Unit, Integration, Security, Performance, E2E)
+- **70%+ code coverage** enforced by JaCoCo
 - **Comprehensive** path traversal protection (31 security tests)
 - **Validated** configuration with JSR-303 annotations
 - **No resource leaks** - All streams properly managed
@@ -310,15 +362,19 @@ This starter is thoroughly tested and validated for production use:
 ### Test Coverage
 
 ```bash
-mvn test  # Run all 124 tests
+mvn test  # Run all 137 tests
 ```
 
 **Test Categories:**
-- 🧪 Unit Tests (8) - Configuration validation
+- 🧪 Unit Tests (15) - Configuration, properties, health indicator
 - 🔗 Integration Tests (10) - Export functionality
 - 🔐 Security Tests (31) - Path traversal protection
 - ⚡ Performance Tests (8) - Metrics performance
 - 🎯 E2E Tests (10) - Complete workflows
+- 📝 Logging Tests (14) - JSON and ECS logging configuration
+- 🔍 Tracing Tests (10) - TracingHelper spans
+- 📊 Metrics Tests (22) - HTTP, JVM, database, reactive metrics
+- 🏥 Health Tests (6) - ObservabilityHealthIndicator
 
 ### Code Quality
 
@@ -330,13 +386,7 @@ mvn test  # Run all 124 tests
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, and pull request guidelines.
 
 ## 📄 License
 
@@ -345,12 +395,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👤 Author
 
 **Imad ATTAR**
-Senior Java Architect | Observability Expert
 
 - 💼 [LinkedIn](https://linkedin.com/in/imad-attar-ba130389)
 - 🐙 [GitHub](https://github.com/imadAttar)
-
-> *Inspired by real production systems where this starter reduced MTTR from 45 minutes to 5 minutes (-89%)*
 
 ## 🙏 Acknowledgments
 

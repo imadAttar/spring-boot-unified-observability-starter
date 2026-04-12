@@ -1,0 +1,28 @@
+# ServiceMonitor for Prometheus Operator
+# Automatically discovers and scrapes Spring Boot applications
+#
+# Prerequisites:
+#   - Prometheus Operator installed (kube-prometheus-stack Helm chart)
+#   - Application pods labeled with: app.kubernetes.io/name: <service-name>
+#
+# Usage:
+#   kubectl apply -f service-monitor.yml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: spring-boot-app
+  labels:
+    release: prometheus  # Must match Prometheus Operator's serviceMonitorSelector
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: spring-boot-app  # Adjust to your service label
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+      scrapeTimeout: 10s
+      honorLabels: true
+  namespaceSelector:
+    matchNames:
+      - default  # Adjust to your namespace

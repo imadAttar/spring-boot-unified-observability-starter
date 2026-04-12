@@ -2,26 +2,23 @@ package com.imadattar.observability.metrics;
 
 import io.micrometer.core.instrument.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Examples of custom business metrics using Micrometer.
- *
+ * <p>
  * This class demonstrates how to create and use:
  * - Counter: For counting events (orders, logins, errors)
  * - Timer: For measuring durations (payment processing, API calls)
  * - Gauge: For tracking current values (active users, queue size)
  * - DistributionSummary: For measuring distributions (order values, file sizes)
- *
- * These examples can be used as templates for implementing domain-specific metrics.
+ * <p>
+ * Copy this class into your application and register it as a Spring bean
+ * to use these metrics in your own service.
  *
  * @since 1.0.0
  */
-@Service
-@ConditionalOnProperty(prefix = "observability.metrics", name = "custom-enabled", havingValue = "true")
 @Slf4j
 public class CustomMetricsExamples {
 

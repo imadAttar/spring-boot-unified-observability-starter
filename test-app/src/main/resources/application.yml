@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: demo-observability-app
+
+server:
+  port: 8080
+
+# Observability starter configuration
+observability:
+  enabled: true
+
+  tracing:
+    service-name: demo-observability-app
+    sampling-probability: 1.0
+    otlp-endpoint: http://localhost:4317
+
+  logging:
+    format: json
+    include-trace-id: true
+
+  stack-export:
+    enabled: true
+    export-on-startup: true
+    export-path: ./monitoring
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,observability
+  endpoint:
+    health:
+      show-details: always
