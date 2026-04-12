@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-12
+
 ### Added
 - `CountedAspect` bean in `MetricsConfiguration` — `@Counted` annotations now work correctly
 - `JsonLoggingEnvironmentPostProcessor` — JSON structured logging now configures Logback automatically via Spring Boot 3.4+ native support
@@ -71,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Compose with Prometheus + Grafana
 - JitPack distribution
 
-[Unreleased]: https://github.com/imadAttar/spring-boot-unified-observability-starter/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/imadAttar/spring-boot-unified-observability-starter/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/imadAttar/spring-boot-unified-observability-starter/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/imadAttar/spring-boot-unified-observability-starter/compare/1.0.0...1.2.0
 [1.0.0]: https://github.com/imadAttar/spring-boot-unified-observability-starter/releases/tag/1.0.0

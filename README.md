@@ -1,7 +1,8 @@
 # 📊 Spring Boot Unified Observability Starter
 
-[![Java](https://img.shields.io/badge/Java-21-orange)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-brightgreen)](https://spring.io/projects/spring-boot)
+[![CI](https://github.com/imadAttar/spring-boot-unified-observability-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/imadAttar/spring-boot-unified-observability-starter/actions/workflows/ci.yml)
+[![Java](https://img.shields.io/badge/Java-21+-orange)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4+-brightgreen)](https://spring.io/projects/spring-boot)
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-enabled-blue)](https://opentelemetry.io/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-ready-red)](https://prometheus.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -42,7 +43,7 @@ Instead of spending hours configuring Prometheus, Grafana, OpenTelemetry, and cr
 <dependency>
     <groupId>com.github.imadAttar</groupId>
     <artifactId>spring-boot-unified-observability-starter</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -70,6 +71,17 @@ This starter is ideal if you're looking for:
 - **Spring Boot application performance monitoring** (APM)
 - **Zero-config observability** for rapid development
 
+## Compatibility
+
+| Component | Required | Notes |
+|---|---|---|
+| **Java** | 21+ | Compiled with `--release 21` |
+| **Spring Boot** | 3.4+ | Structured logging requires 3.4+. Metrics/tracing may work on 3.2-3.3 but are untested. |
+| **Servlet** | Supported | HTTP metrics via `DispatcherServlet` |
+| **WebFlux** | Supported | HTTP metrics via `WebFluxConfigurer` |
+
+> **Documentation**: [Getting Started](docs/getting-started.md) | [Configuration Reference](docs/configuration.md) | [Changelog](CHANGELOG.md)
+
 ## 🚀 Quick Start
 
 ### 1. Add Dependency
@@ -87,7 +99,7 @@ This starter is ideal if you're looking for:
 <dependency>
     <groupId>com.github.imadAttar</groupId>
     <artifactId>spring-boot-unified-observability-starter</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -99,7 +111,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.imadAttar:spring-boot-unified-observability-starter:1.2.0'
+    implementation 'com.github.imadAttar:spring-boot-unified-observability-starter:1.3.0'
 }
 ```
 

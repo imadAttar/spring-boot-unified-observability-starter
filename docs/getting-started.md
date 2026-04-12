@@ -27,7 +27,7 @@ Add the dependency:
 <dependency>
     <groupId>com.github.imadAttar</groupId>
     <artifactId>spring-boot-unified-observability-starter</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -39,7 +39,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.imadAttar:spring-boot-unified-observability-starter:1.2.0'
+    implementation 'com.github.imadAttar:spring-boot-unified-observability-starter:1.3.0'
 }
 ```
 
