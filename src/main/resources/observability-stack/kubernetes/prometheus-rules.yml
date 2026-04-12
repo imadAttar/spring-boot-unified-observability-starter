@@ -1,0 +1,96 @@
+# PrometheusRule for Prometheus Operator
+# Deploys the Spring Boot alert rules into Kubernetes
+#
+# Prerequisites:
+#   - Prometheus Operator installed
+#
+# Usage:
+#   kubectl apply -f prometheus-rules.yml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: spring-boot-alerts
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: spring-boot-latency
+      interval: 30s
+      rules:
+        - alert: HighP95Latency
+          expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High P95 latency on {{ $labels.service }}"
+            description: "P95 latency is {{ $value | humanizeDuration }} (threshold: 1s)"
+
+        - alert: CriticalP99Latency
+          expr: histogram_quantile(0.99, rate(http_server_requests_seconds_bucket[5m])) > 3
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Critical P99 latency on {{ $labels.service }}"
+
+    - name: spring-boot-errors
+      interval: 30s
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+            / sum(rate(http_server_requests_seconds_count[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Error rate above 5% on {{ $labels.service }}"
+
+        - alert: CriticalErrorRate
+          expr: |
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+            / sum(rate(http_server_requests_seconds_count[5m])) > 0.1
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Error rate above 10% on {{ $labels.service }}"
+
+    - name: spring-boot-jvm
+      interval: 30s
+      rules:
+        - alert: HighJvmMemoryUsage
+          expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "JVM heap usage above 85% on {{ $labels.service }}"
+
+        - alert: HighGcPause
+          expr: rate(jvm_gc_pause_seconds_sum[5m]) / rate(jvm_gc_pause_seconds_count[5m]) > 0.5
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High GC pause time on {{ $labels.service }}"
+
+    - name: spring-boot-database
+      interval: 30s
+      rules:
+        - alert: DatabaseConnectionPoolExhausted
+          expr: hikaricp_connections_active / hikaricp_connections_max > 0.9
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Connection pool >90% utilized on {{ $labels.service }}"
+
+        - alert: SlowDatabaseQueries
+          expr: histogram_quantile(0.95, rate(hikaricp_connections_acquire_seconds_bucket[5m])) > 0.5
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Slow DB connection acquisition on {{ $labels.service }}"

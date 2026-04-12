@@ -67,8 +67,8 @@ class ObservabilityE2ETest {
         // ÉTAPE 5: Vérifier l'endpoint d'informations d'observabilité
         mockMvc.perform(get("/actuator/observability/info"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.dashboardCount").value(8))
-            .andExpect(jsonPath("$.dashboards", hasSize(8)))
+            .andExpect(jsonPath("$.dashboardCount").value(9))
+            .andExpect(jsonPath("$.dashboards", hasSize(9)))
             .andExpect(jsonPath("$.exportEndpoint").value("/actuator/observability/export"))
             .andExpect(jsonPath("$.dashboards", hasItems(
                 "Jvm Metrics",
@@ -135,7 +135,7 @@ class ObservabilityE2ETest {
     void allDashboardsAreAvailable() throws Exception {
         mockMvc.perform(get("/actuator/observability/info"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.dashboardCount").value(8))
+            .andExpect(jsonPath("$.dashboardCount").value(9))
             .andExpect(jsonPath("$.dashboards[*]", hasItems(
                 "Alerts Overview",
                 "Application Health",
@@ -218,7 +218,7 @@ class ObservabilityE2ETest {
         for (int i = 0; i < 5; i++) {
             mockMvc.perform(get("/actuator/observability/info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dashboardCount").value(8));
+                .andExpect(jsonPath("$.dashboardCount").value(9));
 
             mockMvc.perform(get("/actuator/observability/export"))
                 .andExpect(status().isOk())

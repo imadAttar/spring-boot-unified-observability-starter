@@ -70,7 +70,7 @@ class ExportStackIntegrationTest {
             assertThat(hasPrometheus).isTrue();
             assertThat(hasStartScript).isTrue();
             assertThat(hasReadme).isTrue();
-            assertThat(dashboardCount).isEqualTo(8);
+            assertThat(dashboardCount).isEqualTo(9);
         }
     }
 
@@ -79,7 +79,7 @@ class ExportStackIntegrationTest {
     void shouldListAllDashboards() throws IOException {
         List<String> dashboards = exportService.getAvailableDashboards();
 
-        assertThat(dashboards).hasSize(8);
+        assertThat(dashboards).hasSize(9);
         assertThat(dashboards).contains(
             "Alerts Overview",
             "Application Health",
@@ -124,7 +124,7 @@ class ExportStackIntegrationTest {
             .filter(path -> path.toString().endsWith(".json"))
             .count();
 
-        assertThat(dashboardCount).isEqualTo(8);
+        assertThat(dashboardCount).isEqualTo(9);
     }
 
     @Test
