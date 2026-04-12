@@ -7,20 +7,22 @@ import com.imadattar.observability.logging.EcsLoggingConfiguration;
 import com.imadattar.observability.export.ObservabilityStackExportService;
 import com.imadattar.observability.export.ObservabilityStackAutoExporter;
 import com.imadattar.observability.export.ObservabilityStackExportController;
+import com.imadattar.observability.health.ObservabilityHealthIndicator;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,7 +31,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
-import jakarta.annotation.PreDestroy;
 import java.time.Duration;
 
 /**
@@ -38,10 +39,10 @@ import java.time.Duration;
  * Configures:
  * - Prometheus metrics (Micrometer)
  * - Distributed tracing (OpenTelemetry)
- * - Structured JSON logging (Logstash encoder)
- * - Grafana dashboard integration
+ * - Structured logging (JSON/ECS)
+ * - Monitoring stack export
  *
- * Includes proper resource cleanup via @PreDestroy to prevent resource leaks.
+ * All OTel components are exposed as proper Spring beans with managed lifecycle.
  *
  * @since 1.0.0
  */
@@ -55,13 +56,11 @@ import java.time.Duration;
     EcsLoggingConfiguration.class,
     ObservabilityStackExportService.class,
     ObservabilityStackAutoExporter.class,
-    ObservabilityStackExportController.class
+    ObservabilityStackExportController.class,
+    ObservabilityHealthIndicator.class
 })
 @Slf4j
 public class ObservabilityAutoConfiguration {
-
-    private SdkTracerProvider tracerProvider;
-    private OtlpGrpcSpanExporter spanExporter;
 
     /**
      * Configure Prometheus metrics registry.
@@ -71,7 +70,7 @@ public class ObservabilityAutoConfiguration {
     @ConditionalOnClass(PrometheusMeterRegistry.class)
     @ConditionalOnProperty(prefix = "observability.metrics", name = "enabled", havingValue = "true", matchIfMissing = true)
     public PrometheusMeterRegistry prometheusMeterRegistry() {
-        log.info("🔧 Configuring Prometheus metrics registry");
+        log.info("Configuring Prometheus metrics registry");
         return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     }
 
@@ -91,74 +90,67 @@ public class ObservabilityAutoConfiguration {
                 "service", properties.getTracing().getServiceName(),
                 "environment", activeEnvironment
             );
-            log.info("✅ Metrics common tags configured: service={}, environment={}",
+            log.info("Metrics common tags configured: service={}, environment={}",
                 properties.getTracing().getServiceName(),
                 activeEnvironment);
         };
     }
 
     /**
-     * Configure OpenTelemetry SDK for distributed tracing.
-     * Resources are properly cleaned up on application shutdown via @PreDestroy.
+     * Configure OTLP span exporter as a standalone bean.
+     * Spring manages its lifecycle (closed on context shutdown).
+     */
+    @Bean(destroyMethod = "close")
+    @ConditionalOnMissingBean(SpanExporter.class)
+    @ConditionalOnClass(OtlpGrpcSpanExporter.class)
+    @ConditionalOnProperty(prefix = "observability.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public OtlpGrpcSpanExporter otlpGrpcSpanExporter(ObservabilityProperties properties) {
+        ObservabilityProperties.Tracing tracingConfig = properties.getTracing();
+        log.info("Configuring OTLP span exporter: endpoint={}", tracingConfig.getOtlpEndpoint());
+
+        return OtlpGrpcSpanExporter.builder()
+            .setEndpoint(tracingConfig.getOtlpEndpoint())
+            .setTimeout(Duration.ofSeconds(tracingConfig.getTimeoutSeconds()))
+            .setConnectTimeout(Duration.ofSeconds(tracingConfig.getConnectTimeoutSeconds()))
+            .build();
+    }
+
+    /**
+     * Configure tracer provider as a standalone bean.
+     * Spring manages its lifecycle (closed on context shutdown).
+     */
+    @Bean(destroyMethod = "close")
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(SdkTracerProvider.class)
+    @ConditionalOnProperty(prefix = "observability.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public SdkTracerProvider sdkTracerProvider(
+            SpanExporter spanExporter,
+            ObservabilityProperties properties) {
+        ObservabilityProperties.Tracing tracingConfig = properties.getTracing();
+        log.info("Configuring tracer provider: sampling={}", tracingConfig.getSamplingProbability());
+
+        return SdkTracerProvider.builder()
+            .addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
+            .setSampler(Sampler.traceIdRatioBased(tracingConfig.getSamplingProbability()))
+            .build();
+    }
+
+    /**
+     * Configure OpenTelemetry SDK with the tracer provider and context propagators.
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(OpenTelemetry.class)
     @ConditionalOnProperty(prefix = "observability.tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public OpenTelemetry openTelemetry(ObservabilityProperties properties) {
-        log.info("🔧 Configuring OpenTelemetry distributed tracing");
+    public OpenTelemetry openTelemetry(
+            SdkTracerProvider tracerProvider,
+            ContextPropagators contextPropagators) {
+        log.info("Configuring OpenTelemetry SDK");
 
-        ObservabilityProperties.Tracing tracingConfig = properties.getTracing();
-
-        // Configure OTLP exporter with timeouts - store reference for cleanup
-        this.spanExporter = OtlpGrpcSpanExporter.builder()
-            .setEndpoint(tracingConfig.getOtlpEndpoint())
-            .setTimeout(Duration.ofSeconds(tracingConfig.getTimeoutSeconds()))
-            .setConnectTimeout(Duration.ofSeconds(tracingConfig.getConnectTimeoutSeconds()))
-            .build();
-
-        // Configure tracer provider with sampling - store reference for cleanup
-        this.tracerProvider = SdkTracerProvider.builder()
-            .addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
-            .setSampler(Sampler.traceIdRatioBased(tracingConfig.getSamplingProbability()))
-            .build();
-
-        OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
+        return OpenTelemetrySdk.builder()
             .setTracerProvider(tracerProvider)
+            .setPropagators(contextPropagators)
             .build();
-
-        log.info("✅ OpenTelemetry configured: endpoint={}, sampling={}",
-            tracingConfig.getOtlpEndpoint(),
-            tracingConfig.getSamplingProbability());
-
-        return openTelemetry;
-    }
-
-    /**
-     * Cleanup OpenTelemetry resources on application shutdown.
-     * Ensures all pending spans are exported and connections are closed properly.
-     */
-    @PreDestroy
-    public void cleanup() {
-        if (tracerProvider != null) {
-            log.info("🔧 Shutting down OpenTelemetry tracer provider...");
-            try {
-                tracerProvider.close();
-                log.info("✅ OpenTelemetry tracer provider shutdown complete");
-            } catch (Exception e) {
-                log.warn("⚠️  Error during OpenTelemetry tracer provider shutdown: {}", e.getMessage());
-            }
-        }
-
-        if (spanExporter != null) {
-            log.info("🔧 Shutting down OTLP span exporter...");
-            try {
-                spanExporter.close();
-                log.info("✅ OTLP span exporter shutdown complete");
-            } catch (Exception e) {
-                log.warn("⚠️  Error during OTLP span exporter shutdown: {}", e.getMessage());
-            }
-        }
     }
 
     /**

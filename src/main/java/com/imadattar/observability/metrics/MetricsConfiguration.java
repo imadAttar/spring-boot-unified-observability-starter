@@ -1,5 +1,6 @@
 package com.imadattar.observability.metrics;
 
+import io.micrometer.core.aop.CountedAspect;
 import io.micrometer.core.aop.TimedAspect;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,6 @@ import org.springframework.context.annotation.Import;
  * - JVM metrics (memory, GC, threads) via JvmMetricsConfiguration
  * - HTTP metrics (requests, responses, latency) via HttpMetricsConfiguration
  * - Database metrics (connection pool, query performance) via DatabaseMetricsConfiguration
- * - Custom business metrics examples via CustomMetricsExamples
  *
  * @since 1.0.0
  */
@@ -27,7 +27,10 @@ import org.springframework.context.annotation.Import;
 @Import({
     JvmMetricsConfiguration.class,
     HttpMetricsConfiguration.class,
-    DatabaseMetricsConfiguration.class
+    ReactiveHttpMetricsConfiguration.class,
+    DatabaseMetricsConfiguration.class,
+    KafkaMetricsConfiguration.class,
+    RabbitMetricsConfiguration.class
 })
 @Slf4j
 public class MetricsConfiguration {
@@ -40,5 +43,15 @@ public class MetricsConfiguration {
     public TimedAspect timedAspect(MeterRegistry registry) {
         log.info("✅ @Timed annotation support enabled");
         return new TimedAspect(registry);
+    }
+
+    /**
+     * Enable @Counted annotation support for method-level counters.
+     */
+    @Bean
+    @ConditionalOnClass(CountedAspect.class)
+    public CountedAspect countedAspect(MeterRegistry registry) {
+        log.info("✅ @Counted annotation support enabled");
+        return new CountedAspect(registry);
     }
 }
