@@ -54,7 +54,7 @@ Instead of spending hours configuring Prometheus, Grafana, OpenTelemetry, and cr
 - 📈 **Auto-configured Metrics**: JVM, HTTP, Database, Custom
 - 🔍 **Distributed Tracing**: OpenTelemetry with automatic correlation
 - 📝 **Structured Logging**: JSON logs with trace IDs (Logstash or ECS format)
-- 📊 **8 Grafana Dashboards**: Auto-exported and ready to import
+- 📊 **9 Grafana Dashboards**: Auto-exported and ready to import
 - 🚨 **20 Prometheus Alerts**: Critical production alerts included
 - 🐳 **Docker Compose Stack**: Complete monitoring setup
 - ⚙️ **Flexible Export**: Monitoring stack exported automatically
@@ -121,9 +121,8 @@ dependencies {
 # application.yml
 observability:
   enabled: true
-  service:
-    name: ${spring.application.name}
-    environment: production
+  tracing:
+    service-name: ${spring.application.name}
   stack-export:
     enabled: true
     export-path: ./monitoring  # Relative, absolute, or ~/path
@@ -141,11 +140,12 @@ mvn spring-boot:run
 
 ```bash
 cd monitoring
-docker-compose up -d
+docker compose up -d
 
 # Access services:
 # Grafana:    http://localhost:3000 (admin/admin)
 # Prometheus: http://localhost:9090
+# Jaeger:     http://localhost:16686
 ```
 
 ## 📦 Exported Monitoring Stack
@@ -166,6 +166,7 @@ monitoring/
         ├── business-metrics.json     # Custom business metrics
         ├── application-health.json   # Health & availability
         ├── distributed-tracing.json  # Trace analysis
+        ├── log-correlation.json      # Log & trace correlation
         └── alerts-overview.json      # Active alerts dashboard
 ```
 
@@ -180,6 +181,7 @@ monitoring/
 | **Business** | Custom business metrics |
 | **Health** | Availability, error tracking |
 | **Tracing** | Distributed traces, service latency |
+| **Log Correlation** | Error correlation, SLO compliance, inbound/outbound latency |
 | **Alerts** | Active alerts, history |
 
 ## 💻 Code Example
@@ -232,12 +234,6 @@ export-path: ${MONITORING_PATH:./monitoring}
 
 ```yaml
 observability:
-  service:
-    name: my-service
-    version: 1.0.0
-    environment: production
-    team: platform-team
-
   metrics:
     enabled: true
     jvm-enabled: true
@@ -246,7 +242,9 @@ observability:
 
   tracing:
     enabled: true
+    service-name: my-service
     sampling-probability: 0.1  # 10% in production
+    otlp-endpoint: http://localhost:4317
 
   logging:
     json-enabled: true
@@ -338,7 +336,7 @@ This starter includes Micrometer with Prometheus registry pre-configured. Metric
 OpenTelemetry is auto-configured. Every HTTP request, database query, and log entry is automatically traced and correlated.
 
 ### How to monitor Spring Boot microservices in production?
-This starter provides production-ready monitoring: 8 Grafana dashboards, 20 Prometheus alerts, distributed tracing, and structured logging.
+This starter provides production-ready monitoring: 9 Grafana dashboards, 20 Prometheus alerts, distributed tracing, and structured logging.
 
 ### How to monitor database connection pools in Spring Boot?
 HikariCP metrics are auto-configured: active connections, idle connections, pending threads, and connection wait time.
@@ -355,8 +353,8 @@ Yes, specifically designed for Spring Boot 3.x with native OpenTelemetry support
 
 This starter is thoroughly tested and validated:
 
-- **124 tests** with 100% pass rate (Unit, Integration, Security, Performance, E2E)
-- **Zero** critical security vulnerabilities
+- **137 tests** with 100% pass rate (Unit, Integration, Security, Performance, E2E)
+- **70%+ code coverage** enforced by JaCoCo
 - **Comprehensive** path traversal protection (31 security tests)
 - **Validated** configuration with JSR-303 annotations
 - **No resource leaks** - All streams properly managed
@@ -364,15 +362,19 @@ This starter is thoroughly tested and validated:
 ### Test Coverage
 
 ```bash
-mvn test  # Run all 124 tests
+mvn test  # Run all 137 tests
 ```
 
 **Test Categories:**
-- 🧪 Unit Tests (8) - Configuration validation
+- 🧪 Unit Tests (15) - Configuration, properties, health indicator
 - 🔗 Integration Tests (10) - Export functionality
 - 🔐 Security Tests (31) - Path traversal protection
 - ⚡ Performance Tests (8) - Metrics performance
 - 🎯 E2E Tests (10) - Complete workflows
+- 📝 Logging Tests (14) - JSON and ECS logging configuration
+- 🔍 Tracing Tests (10) - TracingHelper spans
+- 📊 Metrics Tests (22) - HTTP, JVM, database, reactive metrics
+- 🏥 Health Tests (6) - ObservabilityHealthIndicator
 
 ### Code Quality
 
@@ -384,13 +386,7 @@ mvn test  # Run all 124 tests
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, and pull request guidelines.
 
 ## 📄 License
 
