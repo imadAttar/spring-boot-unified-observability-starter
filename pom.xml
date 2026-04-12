@@ -105,25 +105,29 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-tracing-bridge-otel</artifactId>
+            <optional>true</optional>
         </dependency>
 
-        <!-- Tracing - OpenTelemetry -->
+        <!-- Tracing - OpenTelemetry (optional: only needed if tracing is used) -->
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-api</artifactId>
             <version>${opentelemetry.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-sdk</artifactId>
             <version>${opentelemetry.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-otlp</artifactId>
             <version>${opentelemetry.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- Logging - Structured JSON (Logstash format) -->
@@ -148,6 +152,7 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
             <version>1.11.0</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- Caching -->
@@ -157,10 +162,17 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- HTTP Client for Grafana API -->
+        <!-- Web (Servlet) - for export REST API -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- WebFlux (Reactive) - for reactive HTTP metrics -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
             <optional>true</optional>
         </dependency>
 
@@ -266,7 +278,7 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.55</minimum>
+                                            <minimum>0.70</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

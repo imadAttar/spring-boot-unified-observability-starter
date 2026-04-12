@@ -79,9 +79,21 @@ public class ObservabilityProperties {
         private double[] httpSloMillis = {10, 50, 100, 200, 500, 1000, 2000, 5000};
 
         /**
-         * Enable custom business metrics.
+         * Enable Kafka metrics (auto-detected when kafka-clients is on classpath).
          */
-        private boolean customEnabled = true;
+        private boolean kafkaEnabled = true;
+
+        /**
+         * Enable RabbitMQ metrics (auto-detected when spring-amqp is on classpath).
+         */
+        private boolean rabbitEnabled = true;
+
+        /**
+         * @deprecated Custom metrics examples have been moved to test sources.
+         * Implement your own business metrics by creating a @Service with MeterRegistry.
+         */
+        @Deprecated
+        private boolean customEnabled = false;
     }
 
     @Data
@@ -173,31 +185,18 @@ public class ObservabilityProperties {
         private String level = "INFO";
     }
 
+    /**
+     * @deprecated Grafana API auto-import is not yet implemented.
+     * Use the stack export feature instead to get pre-built dashboards.
+     * This configuration will be removed or implemented in a future version.
+     */
     @Data
+    @Deprecated
     public static class Grafana {
-        /**
-         * Enable Grafana dashboard auto-import.
-         */
-        private boolean enabled = true;
-
-        /**
-         * Grafana server URL.
-         */
+        private boolean enabled = false;
         private String url = "http://localhost:3000";
-
-        /**
-         * Grafana API key.
-         */
         private String apiKey;
-
-        /**
-         * Auto-import dashboards on startup.
-         */
         private boolean autoImport = false;
-
-        /**
-         * Dashboard folder name.
-         */
         private String folderName = "Spring Boot Observability";
     }
 
