@@ -28,9 +28,7 @@ import org.springframework.context.annotation.Import;
     JvmMetricsConfiguration.class,
     HttpMetricsConfiguration.class,
     ReactiveHttpMetricsConfiguration.class,
-    DatabaseMetricsConfiguration.class,
-    KafkaMetricsConfiguration.class,
-    RabbitMetricsConfiguration.class
+    DatabaseMetricsConfiguration.class
 })
 @Slf4j
 public class MetricsConfiguration {

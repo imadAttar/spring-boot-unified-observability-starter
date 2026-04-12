@@ -45,7 +45,7 @@ class ObservabilityPropertiesUnitTest {
         ObservabilityProperties.Tracing tracing = properties.getTracing();
 
         assertThat(tracing.isEnabled()).isTrue();
-        assertThat(tracing.getOtlpEndpoint()).isEqualTo("http://localhost:4318/v1/traces");
+        assertThat(tracing.getOtlpEndpoint()).isEqualTo("http://localhost:4317");
         assertThat(tracing.getSamplingProbability()).isEqualTo(1.0);
         assertThat(tracing.getServiceName()).isEqualTo("spring-boot-app");
         assertThat(tracing.isPropagationEnabled()).isTrue();

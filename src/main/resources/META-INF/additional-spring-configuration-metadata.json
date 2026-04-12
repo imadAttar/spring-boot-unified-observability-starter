@@ -73,7 +73,7 @@
       "name": "observability.tracing.otlp-endpoint",
       "type": "java.lang.String",
       "description": "OTLP gRPC exporter endpoint for sending traces to Jaeger, Tempo, or other backends.",
-      "defaultValue": "http://localhost:4318/v1/traces"
+      "defaultValue": "http://localhost:4317"
     },
     {
       "name": "observability.tracing.sampling-probability",

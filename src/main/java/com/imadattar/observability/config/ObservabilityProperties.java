@@ -79,16 +79,6 @@ public class ObservabilityProperties {
         private double[] httpSloMillis = {10, 50, 100, 200, 500, 1000, 2000, 5000};
 
         /**
-         * Enable Kafka metrics (auto-detected when kafka-clients is on classpath).
-         */
-        private boolean kafkaEnabled = true;
-
-        /**
-         * Enable RabbitMQ metrics (auto-detected when spring-amqp is on classpath).
-         */
-        private boolean rabbitEnabled = true;
-
-        /**
          * @deprecated Custom metrics examples have been moved to test sources.
          * Implement your own business metrics by creating a @Service with MeterRegistry.
          */
@@ -107,7 +97,7 @@ public class ObservabilityProperties {
          * OpenTelemetry exporter endpoint.
          */
         @NotBlank(message = "OTLP endpoint cannot be blank")
-        private String otlpEndpoint = "http://localhost:4318/v1/traces";
+        private String otlpEndpoint = "http://localhost:4317";
 
         /**
          * Sampling probability (0.0 to 1.0).
