@@ -51,7 +51,7 @@
 
         <!-- Observability -->
         <micrometer.version>1.14.2</micrometer.version>
-        <opentelemetry.version>1.43.0</opentelemetry.version>
+        <opentelemetry.version>1.62.0</opentelemetry.version>
         <logstash-logback.version>8.0</logstash-logback.version>
 
         <!-- Utilities -->
